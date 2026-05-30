@@ -1,0 +1,26 @@
+{
+  "name": "e-commerce-shop-v2",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.0.8",
+  "scripts": {
+    "build": "pnpm -r --filter @e-commerce-shop-v2/* run build",
+    "build:services": "pnpm -r --filter \"@e-commerce-shop-v2/*-service\" run build",
+    "build:frontends": "pnpm -r --filter \"./frontends/*\" run build",
+    "compose:build": "docker compose build",
+    "compose:up": "docker compose up",
+    "compose:down": "docker compose down",
+    "dev:shop": "pnpm --filter @e-commerce-shop-v2/shop-service run start:dev",
+    "dev:warehouse": "pnpm --filter @e-commerce-shop-v2/warehouse-service run start:dev",
+    "dev:billing": "pnpm --filter @e-commerce-shop-v2/billing-service run start:dev",
+    "dev:invoice": "pnpm --filter @e-commerce-shop-v2/invoice-service run start:dev",
+    "dev:audit": "pnpm --filter @e-commerce-shop-v2/audit-service run start:dev",
+    "dev:simulation": "pnpm --filter @e-commerce-shop-v2/simulation-panel run dev",
+    "build:shop": "pnpm --filter @e-commerce-shop-v2/shop-service run build",
+    "build:warehouse": "pnpm --filter @e-commerce-shop-v2/warehouse-service run build",
+    "build:billing": "pnpm --filter @e-commerce-shop-v2/billing-service run build",
+    "build:invoice": "pnpm --filter @e-commerce-shop-v2/invoice-service run build",
+    "build:audit": "pnpm --filter @e-commerce-shop-v2/audit-service run build",
+    "build:simulation": "pnpm --filter @e-commerce-shop-v2/simulation-panel run build"
+  }
+}
