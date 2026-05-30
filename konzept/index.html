@@ -25,7 +25,7 @@
         <a href="#demo">Demo</a>
         <a href="#roadmap">Roadmap</a>
       </nav>
-      <a class="sidebar-action" href="README.md">README öffnen</a>
+      <a class="sidebar-action" href="pages/grundlagen/00_quickstart_und_leseweg.html">Leseweg öffnen</a>
     </aside>
 
     <main id="inhalt" class="page-shell">
@@ -41,6 +41,7 @@
             <a class="button primary" href="pages/grundlagen/00_quickstart_und_leseweg.html">Leseweg starten</a>
             <a class="button" href="pages/grundlagen/01a_anforderungsdokument.html">Anforderungen öffnen</a>
             <a class="button" href="pages/architektur/02a_contracts_und_schnittstellen.html">Contracts öffnen</a>
+            <a class="button" href="pages/qualitaet/12_tests_abnahme_demo.html#test-driven-arbeitsmodell">TDD-Konzept öffnen</a>
             <a class="button" href="pages/architektur/07_saga_transaktionen_konsistenz.html">Saga ansehen</a>
             <a class="button" href="pages/qualitaet/12_tests_abnahme_demo.html">Demo-Tests öffnen</a>
           </div>
@@ -218,10 +219,10 @@
             <p>Docker Compose, Netzwerke, Ports, Umgebungsvariablen, Migrationen und ADRs.</p>
             <a href="pages/betrieb/11_infrastruktur_deployment_repo.html">Kapitel öffnen</a>
           </article>
-          <article class="doc-card" data-tags="tests abnahme demo e2e contract concurrency">
+          <article class="doc-card" data-tags="tests abnahme demo e2e contract concurrency tdd test-driven teststruktur testkonzept">
             <span class="doc-number">12</span>
             <h3>Tests, Abnahme und Demo</h3>
-            <p>Testpyramide, E2E-Szenarien, Contract Tests, Demo-Skript und Abnahmecheckliste.</p>
+            <p>TDD-Arbeitsmodell, Teststruktur, Testpyramide, E2E-Szenarien, Contract Tests, Demo-Skript und Abnahmecheckliste.</p>
             <a href="pages/qualitaet/12_tests_abnahme_demo.html">Kapitel öffnen</a>
           </article>
           <article class="doc-card" data-tags="roadmap umsetzungsplan meilensteine risiko priorisierung">
@@ -251,7 +252,7 @@
           <ul>
             <li>Zahlung abgelehnt: Reservierung stornieren, Order `PAYMENT_FAILED`.</li>
             <li>Lager nicht ausreichend: keine Zahlung starten, Order `OUT_OF_STOCK`.</li>
-            <li>Booking fehlgeschlagen: Refund auslösen, Order `ROLLBACK_COMPLETED`.</li>
+            <li>Booking fehlgeschlagen: Refund ausl�Asen, Order `ROLLBACK_COMPLETED`.</li>
             <li>Invoice ausgefallen: kein Payment-Rollback, Retry und Circuit Breaker.</li>
           </ul>
         </div>
