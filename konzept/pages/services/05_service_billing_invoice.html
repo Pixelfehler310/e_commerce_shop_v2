@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Billing und Invoice - Distributed E-Commerce Core</title>
+    <link rel="stylesheet" href="../../assets/styles.css" />
+  </head>
+  <body class="doc-page">
+    <a class="skip-link" href="#inhalt">Zum Inhalt springen</a>
+
+    <aside class="sidebar doc-sidebar" aria-label="Konzeptnavigation">
+      <a class="brand brand-link" href="../../index.html">
+        <span class="brand-mark">DEC</span>
+        <span>
+          <strong>Distributed E-Commerce Core</strong>
+          <small>HTML-Konzept</small>
+        </span>
+      </a>
+      <nav class="chapter-nav" aria-label="Kapitel">
+        <div class="chapter-nav-group"><p>Grundlagen</p><a href="../grundlagen/00_quickstart_und_leseweg.html"><span>00</span>Quickstart und Leseweg</a><a href="../grundlagen/01_anforderungen_ziele_scope.html"><span>01</span>Anforderungen, Ziele und Scope</a><a href="../grundlagen/01a_anforderungsdokument.html"><span>REQ</span>Anforderungsdokument</a></div><div class="chapter-nav-group"><p>Architektur</p><a href="../architektur/02_systemarchitektur_kommunikation.html"><span>02</span>Systemarchitektur und Kommunikation</a><a href="../architektur/07_saga_transaktionen_konsistenz.html"><span>07</span>Saga, Transaktionen und Konsistenz</a></div><div class="chapter-nav-group"><p>Services</p><a href="03_service_shop.html"><span>03</span>Shop-Service</a><a href="04_service_warehouse.html"><span>04</span>Warehouse-Service</a><a href="05_service_billing_invoice.html" aria-current="page"><span>05</span>Billing und Invoice</a><a href="06_audit_service.html"><span>06</span>Audit-Service</a></div><div class="chapter-nav-group"><p>Qualität</p><a href="../qualitaet/08_idempotenz_resilienz_security.html"><span>08</span>Idempotenz, Resilienz und Security</a><a href="../qualitaet/10_observability_logging_tracing.html"><span>10</span>Observability, Logging und Tracing</a><a href="../qualitaet/12_tests_abnahme_demo.html"><span>12</span>Tests, Abnahme und Demo</a></div><div class="chapter-nav-group"><p>Frontends</p><a href="../frontends/09_frontends_simulationssuite.html"><span>09</span>Frontends und Simulationssuite</a></div><div class="chapter-nav-group"><p>Betrieb</p><a href="../betrieb/11_infrastruktur_deployment_repo.html"><span>11</span>Infrastruktur, Deployment und Repository</a></div><div class="chapter-nav-group"><p>Planung</p><a href="../planung/13_umsetzungsplan_roadmap.html"><span>13</span>Umsetzungsplan und Roadmap</a></div>
+      </nav>
+    <a class="sidebar-action" href="../../index.html">Zur Gesamtübersicht</a>
+    </aside>
+
+    <main id="inhalt" class="page-shell doc-shell">
+      <header class="doc-hero">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../../index.html">Übersicht</a>
+          <span>Services</span>
+          <span>Kapitel 05</span>
+        </nav>
+        <p class="eyebrow">Kapitel 05</p>
+        <h1>Billing und Invoice</h1>
+        <p class="lead">Payment-Fassade, Provider-Stubs, Webhooks, Refunds und asynchrone Rechnungserstellung.</p>
+        <div class="doc-actions">
+          <a class="button ghost" href="04_service_warehouse.html">Vorheriges Kapitel</a>
+          <a class="button" href="../../05_service_billing_invoice.md">Markdown-Quelle</a>
+          <a class="button primary" href="06_audit_service.html">Nächstes Kapitel</a>
+        </div>
+      </header>
+
+      
+
+      <div class="doc-layout">
+        <aside class="toc-card" aria-label="Inhaltsverzeichnis"><strong>Inhalt</strong><a class="toc-level-2" href="#billing-service-rolle-im-gesamtsystem">Billing-Service: Rolle im Gesamtsystem</a><a class="toc-level-2" href="#billing-verantwortlichkeiten">Billing-Verantwortlichkeiten</a><a class="toc-level-2" href="#billing-api">Billing-API</a><a class="toc-level-2" href="#payment-fassade">Payment-Fassade</a><a class="toc-level-2" href="#provider-auswahl">Provider-Auswahl</a><a class="toc-level-2" href="#charge-ablauf">Charge-Ablauf</a><a class="toc-level-2" href="#zahlungsstatusmodell">Zahlungsstatusmodell</a><a class="toc-level-2" href="#billing-datenmodell">Billing-Datenmodell</a><a class="toc-level-3" href="#payments">payments</a><a class="toc-level-3" href="#payment-attempts">payment_attempts</a><a class="toc-level-2" href="#refund-ablauf">Refund-Ablauf</a><a class="toc-level-2" href="#asynchroner-webhook-anbieter">Asynchroner Webhook-Anbieter</a><a class="toc-level-2" href="#msw-und-faker">MSW und Faker</a><a class="toc-level-2" href="#billing-audit-events">Billing-Audit-Events</a><a class="toc-level-2" href="#invoice-service-rolle-im-gesamtsystem">Invoice-Service: Rolle im Gesamtsystem</a><a class="toc-level-2" href="#invoice-verantwortlichkeiten">Invoice-Verantwortlichkeiten</a><a class="toc-level-2" href="#invoice-daten-und-speicher">Invoice-Daten und Speicher</a><a class="toc-level-2" href="#invoice-event-verarbeitung">Invoice-Event-Verarbeitung</a><a class="toc-level-2" href="#invoice-audit-events">Invoice-Audit-Events</a><a class="toc-level-2" href="#gemeinsame-risiken">Gemeinsame Risiken</a></aside>
+        <article class="article-content">
+          <h1 id="billing-service-und-invoice-service"><a class="anchor-link" href="#billing-service-und-invoice-service" aria-label="Abschnitt verlinken">#</a>Billing-Service und Invoice-Service</h1>
+<h2 id="billing-service-rolle-im-gesamtsystem"><a class="anchor-link" href="#billing-service-rolle-im-gesamtsystem" aria-label="Abschnitt verlinken">#</a>Billing-Service: Rolle im Gesamtsystem</h2>
+<p>Der Billing-Service kapselt den Zahlungsfluss. Er kennt die Shop-Bestellung nur über technische und zahlungsrelevante Daten, nicht über Warenkorbdetails. Alle konkreten Zahlungsanbieter werden hinter einer Payment-Fassade verborgen.</p>
+<h2 id="billing-verantwortlichkeiten"><a class="anchor-link" href="#billing-verantwortlichkeiten" aria-label="Abschnitt verlinken">#</a>Billing-Verantwortlichkeiten</h2>
+<ul><li>Zahlungsversuche anlegen und persistieren.</li><li>Konfigurierten Payment-Anbieter auswählen.</li><li><code>charge</code>, <code>refund</code> und <code>getStatus</code> über eine einheitliche Schnittstelle ausführen.</li><li>Synchrone und asynchrone Zahlungen unterstützen.</li><li>Webhooks von simulierten Anbietern entgegennehmen.</li><li>Payment-Ergebnisse an den Shop-Service zurückgeben oder zur Fortsetzung bereitstellen.</li><li><code>PaymentSucceeded</code>, <code>PaymentFailed</code> und <code>PaymentRefunded</code> publizieren.</li><li>Realistische Simulation mit MSW und Faker ermöglichen.</li></ul>
+<h2 id="billing-api"><a class="anchor-link" href="#billing-api" aria-label="Abschnitt verlinken">#</a>Billing-API</h2>
+<div class="table-wrap"><table><thead><tr><th>Methode</th><th>Pfad</th><th>Aufrufer</th><th>Beschreibung</th></tr></thead><tbody><tr><td><code>POST</code></td><td><code>/v1/billing/charges</code></td><td>Shop-Service</td><td>Startet Zahlung für eine Bestellung.</td></tr><tr><td><code>POST</code></td><td><code>/v1/billing/refunds</code></td><td>Shop-Service</td><td>Führt Refund für bereits erfolgreiche Zahlung aus.</td></tr><tr><td><code>GET</code></td><td><code>/v1/billing/charges/{correlationId}</code></td><td>Shop-Service, Admin</td><td>Liefert Zahlungsstatus.</td></tr><tr><td><code>POST</code></td><td><code>/v1/billing/webhooks/{provider}</code></td><td>Payment-Stub</td><td>Empfängt asynchrone Bestätigung.</td></tr><tr><td><code>POST</code></td><td><code>/v1/billing/simulation/provider-mode</code></td><td><code>ADMIN</code></td><td>Setzt Verhalten des Payment-Stubs.</td></tr></tbody></table></div>
+<h2 id="payment-fassade"><a class="anchor-link" href="#payment-fassade" aria-label="Abschnitt verlinken">#</a>Payment-Fassade</h2>
+<p>Die Fassade ist das wichtigste Erweiterungselement des Billing-Service.</p>
+<pre class="code-block language-ts"><code>export interface PaymentProvider {
+  charge(request: ChargeRequest): Promise&lt;ChargeResult&gt;;
+  refund(request: RefundRequest): Promise&lt;RefundResult&gt;;
+  getStatus(providerTransactionId: string): Promise&lt;PaymentStatusResult&gt;;
+}</code></pre>
+<p>Pflichtprinzipien:</p>
+<ul><li>Business-Code ruft niemals direkt <code>StripeStub</code>, <code>KlarnaStub</code> oder andere Anbieter auf.</li><li>Anbieter werden über eine Factory oder Dependency Injection anhand einer Umgebungsvariable ausgewählt.</li><li>Ein neuer Anbieter implementiert nur das Interface und wird registriert.</li><li>Anbieter-spezifische Fehler werden in kanonische Billing-Fehler übersetzt.</li></ul>
+<h2 id="provider-auswahl"><a class="anchor-link" href="#provider-auswahl" aria-label="Abschnitt verlinken">#</a>Provider-Auswahl</h2>
+<p>Beispielhafte Umgebungsvariablen:</p>
+<pre class="code-block language-env"><code>PAYMENT_PROVIDER=stripe-sim
+PAYMENT_MODE=sync-success
+PAYMENT_WEBHOOK_DELAY_MS=2500
+PAYMENT_FORCE_NEXT_RESULT=none
+BILLING_PUBLIC_WEBHOOK_BASE_URL=http://billing-service:3000</code></pre>
+<p>Mögliche Provider:</p>
+<div class="table-wrap"><table><thead><tr><th>Provider</th><th>Zweck</th></tr></thead><tbody><tr><td><code>stripe-sim</code></td><td>Kartenzahlungsähnliche Simulation.</td></tr><tr><td><code>klarna-sim</code></td><td>Rechnungskaufähnliche Simulation.</td></tr><tr><td><code>async-webhook-sim</code></td><td>Gibt <code>PENDING</code> zurück und bestätigt später per Webhook.</td></tr></tbody></table></div>
+<h2 id="charge-ablauf"><a class="anchor-link" href="#charge-ablauf" aria-label="Abschnitt verlinken">#</a>Charge-Ablauf</h2>
+<p>Request von Shop an Billing:</p>
+<pre class="code-block language-json"><code>{
+  &quot;correlationId&quot;: &quot;ord-2026-0001&quot;,
+  &quot;amountGross&quot;: 259.98,
+  &quot;currency&quot;: &quot;EUR&quot;,
+  &quot;customerId&quot;: &quot;usr-123&quot;,
+  &quot;paymentMethod&quot;: {
+    &quot;type&quot;: &quot;SIMULATED_CARD&quot;,
+    &quot;token&quot;: &quot;tok_demo_success&quot;
+  }
+}</code></pre>
+<p>Response bei synchronem Erfolg:</p>
+<pre class="code-block language-json"><code>{
+  &quot;correlationId&quot;: &quot;ord-2026-0001&quot;,
+  &quot;paymentId&quot;: &quot;pay-123&quot;,
+  &quot;provider&quot;: &quot;stripe-sim&quot;,
+  &quot;providerTransactionId&quot;: &quot;txn_abc&quot;,
+  &quot;status&quot;: &quot;SUCCEEDED&quot;
+}</code></pre>
+<p>Response bei asynchronem Anbieter:</p>
+<pre class="code-block language-json"><code>{
+  &quot;correlationId&quot;: &quot;ord-2026-0001&quot;,
+  &quot;paymentId&quot;: &quot;pay-123&quot;,
+  &quot;provider&quot;: &quot;async-webhook-sim&quot;,
+  &quot;providerTransactionId&quot;: &quot;txn_async_abc&quot;,
+  &quot;status&quot;: &quot;PENDING&quot;
+}</code></pre>
+<h2 id="zahlungsstatusmodell"><a class="anchor-link" href="#zahlungsstatusmodell" aria-label="Abschnitt verlinken">#</a>Zahlungsstatusmodell</h2>
+<div class="table-wrap"><table><thead><tr><th>Status</th><th>Bedeutung</th><th>Endzustand</th></tr></thead><tbody><tr><td><code>INITIATED</code></td><td>Payment-Datensatz angelegt.</td><td>Nein</td></tr><tr><td><code>PROVIDER_REQUESTED</code></td><td>Provider wurde aufgerufen.</td><td>Nein</td></tr><tr><td><code>PENDING</code></td><td>Asynchrone Bestätigung ausstehend.</td><td>Nein</td></tr><tr><td><code>SUCCEEDED</code></td><td>Zahlung erfolgreich.</td><td>Ja</td></tr><tr><td><code>FAILED</code></td><td>Zahlung abgelehnt oder technisch endgültig fehlgeschlagen.</td><td>Ja</td></tr><tr><td><code>REFUND_REQUESTED</code></td><td>Refund wurde gestartet.</td><td>Nein</td></tr><tr><td><code>REFUNDED</code></td><td>Zahlung wurde erfolgreich rückerstattet.</td><td>Ja</td></tr><tr><td><code>REFUND_FAILED</code></td><td>Refund fehlgeschlagen, manuelle Prüfung nötig.</td><td>Ja</td></tr></tbody></table></div>
+<h2 id="billing-datenmodell"><a class="anchor-link" href="#billing-datenmodell" aria-label="Abschnitt verlinken">#</a>Billing-Datenmodell</h2>
+<h3 id="payments"><a class="anchor-link" href="#payments" aria-label="Abschnitt verlinken">#</a><code>payments</code></h3>
+<div class="table-wrap"><table><thead><tr><th>Feld</th><th>Typ</th><th>Beschreibung</th></tr></thead><tbody><tr><td><code>id</code></td><td>UUID</td><td>Payment-ID.</td></tr><tr><td><code>correlation_id</code></td><td>Text, unique</td><td>Bestellprozess.</td></tr><tr><td><code>provider</code></td><td>Text</td><td>Aktiver Provider.</td></tr><tr><td><code>provider_transaction_id</code></td><td>Text nullable</td><td>Externe oder simulierte Transaktions-ID.</td></tr><tr><td><code>amount_gross</code></td><td>Numeric</td><td>Betrag.</td></tr><tr><td><code>currency</code></td><td>Char(3)</td><td>Währung.</td></tr><tr><td><code>status</code></td><td>Text</td><td>Payment-Status.</td></tr><tr><td><code>failure_code</code></td><td>Text nullable</td><td>Kanonischer Fehlercode.</td></tr><tr><td><code>created_at</code></td><td>Timestamp</td><td>Anlage.</td></tr><tr><td><code>updated_at</code></td><td>Timestamp</td><td>Letzte Änderung.</td></tr></tbody></table></div>
+<h3 id="payment-attempts"><a class="anchor-link" href="#payment-attempts" aria-label="Abschnitt verlinken">#</a><code>payment_attempts</code></h3>
+<p>Jeder Provider-Aufruf wird separat protokolliert. Dadurch bleiben Retries nachvollziehbar.</p>
+<div class="table-wrap"><table><thead><tr><th>Feld</th><th>Typ</th><th>Beschreibung</th></tr></thead><tbody><tr><td><code>id</code></td><td>UUID</td><td>Attempt-ID.</td></tr><tr><td><code>payment_id</code></td><td>UUID</td><td>Payment-Referenz.</td></tr><tr><td><code>operation</code></td><td>Text</td><td><code>CHARGE</code>, <code>REFUND</code>, <code>STATUS</code>.</td></tr><tr><td><code>request_payload</code></td><td>JSONB</td><td>Maskierter Request.</td></tr><tr><td><code>response_payload</code></td><td>JSONB</td><td>Maskierte Response.</td></tr><tr><td><code>status</code></td><td>Text</td><td><code>SUCCESS</code>, <code>FAILED</code>, <code>TIMEOUT</code>.</td></tr><tr><td><code>duration_ms</code></td><td>Integer</td><td>Laufzeit.</td></tr><tr><td><code>created_at</code></td><td>Timestamp</td><td>Zeitpunkt.</td></tr></tbody></table></div>
+<h2 id="refund-ablauf"><a class="anchor-link" href="#refund-ablauf" aria-label="Abschnitt verlinken">#</a>Refund-Ablauf</h2>
+<p>Ein Refund wird ausgelöst, wenn die Zahlung erfolgreich war, aber die finale Lagerausbuchung scheitert.</p>
+<p>Regeln:</p>
+<ul><li>Refunds sind idempotent je <code>correlationId</code>.</li><li>Der Billing-Service prüft, ob eine Zahlung mit Status <code>SUCCEEDED</code> existiert.</li><li>Provider-spezifische Refund-IDs werden gespeichert.</li><li>Nach erfolgreichem Refund wird <code>PaymentRefunded</code> publiziert.</li><li>Bei fehlgeschlagenem Refund muss der Shop-Service <code>FAILED_REQUIRES_MANUAL_REVIEW</code> setzen können.</li></ul>
+<h2 id="asynchroner-webhook-anbieter"><a class="anchor-link" href="#asynchroner-webhook-anbieter" aria-label="Abschnitt verlinken">#</a>Asynchroner Webhook-Anbieter</h2>
+<p>Der asynchrone Stub simuliert realistische Zahlungsflüsse:</p>
+<ol><li>Shop-Service ruft <code>POST /v1/billing/charges</code> auf.</li><li>Billing-Service legt Payment mit <code>PENDING</code> an.</li><li>Provider-Stub plant einen Webhook nach <code>PAYMENT_WEBHOOK_DELAY_MS</code>.</li><li>Billing-Service antwortet dem Shop-Service mit <code>PENDING</code>.</li><li>Shop-Service setzt Order auf <code>PAYMENT_PENDING</code>.</li><li>Stub sendet <code>POST /v1/billing/webhooks/{provider}</code>.</li><li>Billing-Service validiert die simulierte Signatur.</li><li>Payment wechselt auf <code>SUCCEEDED</code> oder <code>FAILED</code>.</li><li>Billing publiziert ein Event, über das der Shop-Service die Saga fortsetzt oder eine Kompensation startet.</li></ol>
+<h2 id="msw-und-faker"><a class="anchor-link" href="#msw-und-faker" aria-label="Abschnitt verlinken">#</a>MSW und Faker</h2>
+<p>MSW simuliert Provider-HTTP-Endpunkte auf Netzwerkebene. Dadurch bleibt der Adapter-Code realistisch, obwohl keine echten externen Dienste kontaktiert werden.</p>
+<p>Faker erzeugt:</p>
+<ul><li>Transaktions-IDs.</li><li>Autorisierungscodes.</li><li>Provider-Fehlermeldungen.</li><li>Webhook-Event-IDs.</li><li>Maskierte Zahlungsdaten für Logs.</li></ul>
+<p>Wichtig: Logs dürfen keine echten oder simulierten Vollkartendaten enthalten. Auch Demo-Daten sollten wie sensible Daten behandelt und maskiert werden.</p>
+<h2 id="billing-audit-events"><a class="anchor-link" href="#billing-audit-events" aria-label="Abschnitt verlinken">#</a>Billing-Audit-Events</h2>
+<div class="table-wrap"><table><thead><tr><th>Event</th><th>Bedeutung</th></tr></thead><tbody><tr><td><code>PaymentInitiated</code></td><td>Payment-Datensatz angelegt.</td></tr><tr><td><code>PaymentProviderRequested</code></td><td>Provider-Aufruf gestartet.</td></tr><tr><td><code>PaymentPending</code></td><td>Provider liefert Pending.</td></tr><tr><td><code>PaymentSucceeded</code></td><td>Zahlung erfolgreich.</td></tr><tr><td><code>PaymentFailed</code></td><td>Zahlung abgelehnt oder endgültig fehlgeschlagen.</td></tr><tr><td><code>PaymentRefundRequested</code></td><td>Refund gestartet.</td></tr><tr><td><code>PaymentRefunded</code></td><td>Refund erfolgreich.</td></tr><tr><td><code>PaymentRefundFailed</code></td><td>Refund fehlgeschlagen.</td></tr><tr><td><code>PaymentWebhookReceived</code></td><td>Webhook eingegangen.</td></tr></tbody></table></div>
+<h2 id="invoice-service-rolle-im-gesamtsystem"><a class="anchor-link" href="#invoice-service-rolle-im-gesamtsystem" aria-label="Abschnitt verlinken">#</a>Invoice-Service: Rolle im Gesamtsystem</h2>
+<p>Der Invoice-Service erzeugt PDF-Rechnungen nach erfolgreicher Zahlung. Er wird asynchron über RabbitMQ angestoßen und besitzt keine öffentlichen REST-Endpunkte. Ein Ausfall des Invoice-Service darf nicht automatisch zum Rollback einer erfolgreichen Zahlung führen.</p>
+<h2 id="invoice-verantwortlichkeiten"><a class="anchor-link" href="#invoice-verantwortlichkeiten" aria-label="Abschnitt verlinken">#</a>Invoice-Verantwortlichkeiten</h2>
+<ul><li><code>PaymentSucceeded</code>-Events konsumieren.</li><li>Rechnungsdaten validieren.</li><li>PDF-Datei erzeugen.</li><li>Datei in ein Volume schreiben.</li><li>Rechnungsstatus intern protokollieren.</li><li>Circuit-Breaker- und Retry-Zustände auditieren.</li></ul>
+<h2 id="invoice-daten-und-speicher"><a class="anchor-link" href="#invoice-daten-und-speicher" aria-label="Abschnitt verlinken">#</a>Invoice-Daten und Speicher</h2>
+<p>Empfohlene Struktur im Volume:</p>
+<pre class="code-block language-text"><code>/invoices/
+  2026/
+    05/
+      ord-2026-0001.pdf</code></pre>
+<p>Optionales Metadatenmodell:</p>
+<div class="table-wrap"><table><thead><tr><th>Feld</th><th>Typ</th><th>Beschreibung</th></tr></thead><tbody><tr><td><code>id</code></td><td>UUID</td><td>Rechnungs-ID.</td></tr><tr><td><code>correlation_id</code></td><td>Text, unique</td><td>Bestellung.</td></tr><tr><td><code>invoice_number</code></td><td>Text</td><td>Fachliche Rechnungsnummer.</td></tr><tr><td><code>file_path</code></td><td>Text</td><td>Speicherort.</td></tr><tr><td><code>status</code></td><td>Text</td><td><code>GENERATED</code>, <code>FAILED</code>, <code>RETRY_PENDING</code>.</td></tr><tr><td><code>created_at</code></td><td>Timestamp</td><td>Erstellung.</td></tr></tbody></table></div>
+<h2 id="invoice-event-verarbeitung"><a class="anchor-link" href="#invoice-event-verarbeitung" aria-label="Abschnitt verlinken">#</a>Invoice-Event-Verarbeitung</h2>
+<ol><li>Event aus RabbitMQ lesen.</li><li><code>correlationId</code> auf bereits erzeugte Rechnung prüfen.</li><li>Rechnungspayload validieren.</li><li>PDF generieren.</li><li>Datei atomar schreiben.</li><li><code>InvoiceGenerated</code> auditieren.</li><li>Message acknlowedgen.</li></ol>
+<p>Bei Fehlern:</p>
+<ul><li>Retry bis zur definierten Maximalanzahl.</li><li>Danach Dead-Letter-Queue oder Status <code>FAILED</code>.</li><li>Circuit-Breaker-Zustände auditieren.</li></ul>
+<h2 id="invoice-audit-events"><a class="anchor-link" href="#invoice-audit-events" aria-label="Abschnitt verlinken">#</a>Invoice-Audit-Events</h2>
+<div class="table-wrap"><table><thead><tr><th>Event</th><th>Bedeutung</th></tr></thead><tbody><tr><td><code>InvoiceGenerationRequested</code></td><td>Payment-Erfolg löst Rechnung aus.</td></tr><tr><td><code>InvoiceGenerated</code></td><td>PDF erfolgreich erzeugt.</td></tr><tr><td><code>InvoiceGenerationFailed</code></td><td>Fehler bei PDF-Erstellung.</td></tr><tr><td><code>InvoiceRetryScheduled</code></td><td>Retry wird geplant.</td></tr><tr><td><code>CircuitBreakerStateChanged</code></td><td>Breaker wechselt Zustand.</td></tr></tbody></table></div>
+<h2 id="gemeinsame-risiken"><a class="anchor-link" href="#gemeinsame-risiken" aria-label="Abschnitt verlinken">#</a>Gemeinsame Risiken</h2>
+<div class="table-wrap"><table><thead><tr><th>Risiko</th><th>Gegenmaßnahme</th></tr></thead><tbody><tr><td>Webhook doppelt empfangen</td><td>Webhook-Event-ID und <code>correlationId</code> idempotent verarbeiten.</td></tr><tr><td>Payment erfolgreich, Shop nicht erreichbar</td><td>Status im Billing persistieren und Fortsetzung retrybar machen.</td></tr><tr><td>Refund schlägt fehl</td><td>Manuelle Prüfung sichtbar machen, Audit vollständig halten.</td></tr><tr><td>Invoice-Generierung blockiert Bestellabschluss</td><td>Invoice strikt asynchron und nicht als Zahlungskompensation behandeln.</td></tr><tr><td>Provider-Fehler uneinheitlich</td><td>Fehler in kanonische Codes übersetzen.</td></tr></tbody></table></div>
+        </article>
+      </div>
+
+      <nav class="doc-pagination" aria-label="Kapitel wechseln">
+        <a class="button ghost" href="04_service_warehouse.html">Vorheriges Kapitel</a>
+        <a class="button" href="../../index.html#kapitel">Alle Kapitel</a>
+        <a class="button primary" href="06_audit_service.html">Nächstes Kapitel</a>
+      </nav>
+    </main>
+  </body>
+</html>

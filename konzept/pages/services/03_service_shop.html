@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Shop-Service - Distributed E-Commerce Core</title>
+    <link rel="stylesheet" href="../../assets/styles.css" />
+  </head>
+  <body class="doc-page">
+    <a class="skip-link" href="#inhalt">Zum Inhalt springen</a>
+
+    <aside class="sidebar doc-sidebar" aria-label="Konzeptnavigation">
+      <a class="brand brand-link" href="../../index.html">
+        <span class="brand-mark">DEC</span>
+        <span>
+          <strong>Distributed E-Commerce Core</strong>
+          <small>HTML-Konzept</small>
+        </span>
+      </a>
+      <nav class="chapter-nav" aria-label="Kapitel">
+        <div class="chapter-nav-group"><p>Grundlagen</p><a href="../grundlagen/00_quickstart_und_leseweg.html"><span>00</span>Quickstart und Leseweg</a><a href="../grundlagen/01_anforderungen_ziele_scope.html"><span>01</span>Anforderungen, Ziele und Scope</a><a href="../grundlagen/01a_anforderungsdokument.html"><span>REQ</span>Anforderungsdokument</a></div><div class="chapter-nav-group"><p>Architektur</p><a href="../architektur/02_systemarchitektur_kommunikation.html"><span>02</span>Systemarchitektur und Kommunikation</a><a href="../architektur/07_saga_transaktionen_konsistenz.html"><span>07</span>Saga, Transaktionen und Konsistenz</a></div><div class="chapter-nav-group"><p>Services</p><a href="03_service_shop.html" aria-current="page"><span>03</span>Shop-Service</a><a href="04_service_warehouse.html"><span>04</span>Warehouse-Service</a><a href="05_service_billing_invoice.html"><span>05</span>Billing und Invoice</a><a href="06_audit_service.html"><span>06</span>Audit-Service</a></div><div class="chapter-nav-group"><p>Qualität</p><a href="../qualitaet/08_idempotenz_resilienz_security.html"><span>08</span>Idempotenz, Resilienz und Security</a><a href="../qualitaet/10_observability_logging_tracing.html"><span>10</span>Observability, Logging und Tracing</a><a href="../qualitaet/12_tests_abnahme_demo.html"><span>12</span>Tests, Abnahme und Demo</a></div><div class="chapter-nav-group"><p>Frontends</p><a href="../frontends/09_frontends_simulationssuite.html"><span>09</span>Frontends und Simulationssuite</a></div><div class="chapter-nav-group"><p>Betrieb</p><a href="../betrieb/11_infrastruktur_deployment_repo.html"><span>11</span>Infrastruktur, Deployment und Repository</a></div><div class="chapter-nav-group"><p>Planung</p><a href="../planung/13_umsetzungsplan_roadmap.html"><span>13</span>Umsetzungsplan und Roadmap</a></div>
+      </nav>
+    <a class="sidebar-action" href="../../index.html">Zur Gesamtübersicht</a>
+    </aside>
+
+    <main id="inhalt" class="page-shell doc-shell">
+      <header class="doc-hero">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../../index.html">Übersicht</a>
+          <span>Services</span>
+          <span>Kapitel 03</span>
+        </nav>
+        <p class="eyebrow">Kapitel 03</p>
+        <h1>Shop-Service</h1>
+        <p class="lead">Gateway, Auth, Produktkatalog, Warenkorb, Order-Statusmodell und Saga-Orchestrierung im Shop-Service.</p>
+        <div class="doc-actions">
+          <a class="button ghost" href="../architektur/02_systemarchitektur_kommunikation.html">Vorheriges Kapitel</a>
+          <a class="button" href="../../03_service_shop.md">Markdown-Quelle</a>
+          <a class="button primary" href="04_service_warehouse.html">Nächstes Kapitel</a>
+        </div>
+      </header>
+
+      
+
+      <div class="doc-layout">
+        <aside class="toc-card" aria-label="Inhaltsverzeichnis"><strong>Inhalt</strong><a class="toc-level-2" href="#rolle-im-gesamtsystem">Rolle im Gesamtsystem</a><a class="toc-level-2" href="#verantwortlichkeiten">Verantwortlichkeiten</a><a class="toc-level-2" href="#interne-module">Interne Module</a><a class="toc-level-2" href="#oeffentliche-api">Öffentliche API</a><a class="toc-level-3" href="#authentifizierung">Authentifizierung</a><a class="toc-level-3" href="#produktmanagement">Produktmanagement</a><a class="toc-level-3" href="#warenkorb">Warenkorb</a><a class="toc-level-3" href="#bestellung">Bestellung</a><a class="toc-level-2" href="#datenmodell">Datenmodell</a><a class="toc-level-3" href="#users">users</a><a class="toc-level-3" href="#products">products</a><a class="toc-level-3" href="#baskets-und-basket-items">baskets und basket_items</a><a class="toc-level-3" href="#orders-und-order-items">orders und order_items</a><a class="toc-level-2" href="#bestellstatusmodell">Bestellstatusmodell</a><a class="toc-level-2" href="#saga-orchestrierung">Saga-Orchestrierung</a><a class="toc-level-2" href="#idempotenzintegration">Idempotenzintegration</a><a class="toc-level-2" href="#audit-events-des-shop-service">Audit-Events des Shop-Service</a><a class="toc-level-2" href="#validierungsregeln">Validierungsregeln</a><a class="toc-level-2" href="#fehlerfaelle">Fehlerfälle</a><a class="toc-level-2" href="#implementierungshinweise-fuer-nestjs">Implementierungshinweise für NestJS</a></aside>
+        <article class="article-content">
+          <h1 id="shop-service"><a class="anchor-link" href="#shop-service" aria-label="Abschnitt verlinken">#</a>Shop-Service</h1>
+<h2 id="rolle-im-gesamtsystem"><a class="anchor-link" href="#rolle-im-gesamtsystem" aria-label="Abschnitt verlinken">#</a>Rolle im Gesamtsystem</h2>
+<p>Der Shop-Service ist der zentrale Eintrittspunkt des Systems. Er übernimmt die Funktion eines API-Gateways, hält die kundenbezogenen Shop-Daten und orchestriert den verteilten Bestellprozess. Kein Frontend spricht direkt mit Warehouse, Billing, Invoice oder Audit. Dadurch bleibt die externe API konsistent und die interne Topologie kann verändert werden, ohne die Clients anzupassen.</p>
+<h2 id="verantwortlichkeiten"><a class="anchor-link" href="#verantwortlichkeiten" aria-label="Abschnitt verlinken">#</a>Verantwortlichkeiten</h2>
+<p>Der Shop-Service verantwortet:</p>
+<ul><li>Registrierung und Login.</li><li>JWT-Ausstellung und Rolleninformationen.</li><li>Produktkatalog aus Shop-Sicht.</li><li>Warenkorbverwaltung pro Nutzer.</li><li>Bestellerstellung aus dem Warenkorb.</li><li>Idempotenz für <code>POST /v1/orders</code>.</li><li>Saga-Orchestrierung über Warehouse und Billing.</li><li>Statusmodell der Bestellung.</li><li>Weitergabe von <code>correlationId</code> und <code>X-Idempotency-Key</code>.</li><li>Veröffentlichung von Audit-relevanten Domain-Events.</li></ul>
+<h2 id="interne-module"><a class="anchor-link" href="#interne-module" aria-label="Abschnitt verlinken">#</a>Interne Module</h2>
+<div class="table-wrap"><table><thead><tr><th>Modul</th><th>Aufgabe</th></tr></thead><tbody><tr><td><code>AuthModule</code></td><td>Registrierung, Login, Passwort-Hashing, JWT-Ausstellung.</td></tr><tr><td><code>UsersModule</code></td><td>Nutzerprofile, Rollen, interne User-Abfragen.</td></tr><tr><td><code>ProductsModule</code></td><td>Produktkatalog, Produktanlage, Produktstatus.</td></tr><tr><td><code>BasketModule</code></td><td>Aktiver Warenkorb, Positionen, Mengenänderungen.</td></tr><tr><td><code>OrdersModule</code></td><td>Bestellungen, Statuswechsel, Abfragen.</td></tr><tr><td><code>SagaModule</code></td><td>Orchestrierter Bestellablauf und Kompensationslogik.</td></tr><tr><td><code>IdempotencyModule</code></td><td>Redis-basierte Erkennung wiederholter Requests.</td></tr><tr><td><code>ClientsModule</code></td><td>Typed HTTP-Clients für Warehouse und Billing.</td></tr><tr><td><code>AuditPublisherModule</code></td><td>Publikation von Domain-Events in Richtung Audit.</td></tr></tbody></table></div>
+<h2 id="oeffentliche-api"><a class="anchor-link" href="#oeffentliche-api" aria-label="Abschnitt verlinken">#</a>Öffentliche API</h2>
+<h3 id="authentifizierung"><a class="anchor-link" href="#authentifizierung" aria-label="Abschnitt verlinken">#</a>Authentifizierung</h3>
+<div class="table-wrap"><table><thead><tr><th>Methode</th><th>Pfad</th><th>Rolle</th><th>Beschreibung</th></tr></thead><tbody><tr><td><code>POST</code></td><td><code>/v1/auth/register</code></td><td>Öffentlich</td><td>Erstellt einen neuen Nutzer mit Standardrolle <code>CUSTOMER</code>.</td></tr><tr><td><code>POST</code></td><td><code>/v1/auth/login</code></td><td>Öffentlich</td><td>Prüft Credentials und gibt Access Token aus.</td></tr></tbody></table></div>
+<p>Register-Request:</p>
+<pre class="code-block language-json"><code>{
+  &quot;email&quot;: &quot;kunde@example.local&quot;,
+  &quot;password&quot;: &quot;change-me&quot;,
+  &quot;displayName&quot;: &quot;Max Muster&quot;
+}</code></pre>
+<p>Login-Response:</p>
+<pre class="code-block language-json"><code>{
+  &quot;accessToken&quot;: &quot;jwt-token&quot;,
+  &quot;tokenType&quot;: &quot;Bearer&quot;,
+  &quot;expiresIn&quot;: 3600,
+  &quot;user&quot;: {
+    &quot;id&quot;: &quot;usr_...&quot;,
+    &quot;email&quot;: &quot;kunde@example.local&quot;,
+    &quot;roles&quot;: [&quot;CUSTOMER&quot;]
+  }
+}</code></pre>
+<h3 id="produktmanagement"><a class="anchor-link" href="#produktmanagement" aria-label="Abschnitt verlinken">#</a>Produktmanagement</h3>
+<div class="table-wrap"><table><thead><tr><th>Methode</th><th>Pfad</th><th>Rolle</th><th>Beschreibung</th></tr></thead><tbody><tr><td><code>GET</code></td><td><code>/v1/products</code></td><td>Öffentlich</td><td>Paginierte und filterbare Produktliste.</td></tr><tr><td><code>GET</code></td><td><code>/v1/products/{productId}</code></td><td>Öffentlich</td><td>Detailansicht eines Produkts.</td></tr><tr><td><code>POST</code></td><td><code>/v1/products</code></td><td><code>ADMIN</code></td><td>Erstellt ein Produkt und initialisiert den Warehouse-Datensatz.</td></tr><tr><td><code>PATCH</code></td><td><code>/v1/products/{productId}</code></td><td><code>ADMIN</code></td><td>Bearbeitet Produktdaten aus Shop-Sicht.</td></tr></tbody></table></div>
+<p>Produktanlage:</p>
+<pre class="code-block language-json"><code>{
+  &quot;name&quot;: &quot;USB-C Docking Station&quot;,
+  &quot;description&quot;: &quot;Docking Station mit HDMI, Ethernet und Power Delivery.&quot;,
+  &quot;priceGross&quot;: 129.99,
+  &quot;currency&quot;: &quot;EUR&quot;,
+  &quot;sku&quot;: &quot;DOCK-USB-C-001&quot;,
+  &quot;initialStock&quot;: 25,
+  &quot;active&quot;: true
+}</code></pre>
+<p>Nach erfolgreicher Produktanlage ruft der Shop-Service synchron den Warehouse-Service auf, um den Bestandssatz mit <code>productId</code>, <code>sku</code> und <code>initialStock</code> anzulegen. Schlägt diese Initialisierung fehl, wird die Produktanlage zurückgerollt oder als <code>PENDING_STOCK_INITIALIZATION</code> markiert. Für ein Uni-Projekt ist ein Rollback der lokalen Produktanlage am klarsten demonstrierbar.</p>
+<h3 id="warenkorb"><a class="anchor-link" href="#warenkorb" aria-label="Abschnitt verlinken">#</a>Warenkorb</h3>
+<div class="table-wrap"><table><thead><tr><th>Methode</th><th>Pfad</th><th>Rolle</th><th>Beschreibung</th></tr></thead><tbody><tr><td><code>GET</code></td><td><code>/v1/baskets</code></td><td><code>CUSTOMER</code></td><td>Gibt den aktiven Warenkorb zurück.</td></tr><tr><td><code>POST</code></td><td><code>/v1/baskets/items</code></td><td><code>CUSTOMER</code></td><td>Fügt ein Produkt hinzu oder erhöht die Menge.</td></tr><tr><td><code>PATCH</code></td><td><code>/v1/baskets/items/{productId}</code></td><td><code>CUSTOMER</code></td><td>Setzt die Menge einer Position.</td></tr><tr><td><code>DELETE</code></td><td><code>/v1/baskets/items/{productId}</code></td><td><code>CUSTOMER</code></td><td>Entfernt eine Position vollständig.</td></tr></tbody></table></div>
+<p>Warenkorbpositionen speichern Preis-Snapshots. Damit bleibt nachvollziehbar, zu welchem Preis der Nutzer bestellt hat, auch wenn sich der Produktpreis später ändert.</p>
+<h3 id="bestellung"><a class="anchor-link" href="#bestellung" aria-label="Abschnitt verlinken">#</a>Bestellung</h3>
+<div class="table-wrap"><table><thead><tr><th>Methode</th><th>Pfad</th><th>Rolle</th><th>Beschreibung</th></tr></thead><tbody><tr><td><code>POST</code></td><td><code>/v1/orders</code></td><td><code>CUSTOMER</code></td><td>Wandelt den Warenkorb in eine Bestellung und startet die Saga.</td></tr><tr><td><code>GET</code></td><td><code>/v1/orders/{correlationId}</code></td><td><code>CUSTOMER</code>, <code>ADMIN</code></td><td>Gibt aktuellen Status und grobe Prozessinformationen zurück.</td></tr><tr><td><code>GET</code></td><td><code>/v1/orders</code></td><td><code>CUSTOMER</code>, <code>ADMIN</code></td><td>Listet eigene oder alle Bestellungen abhängig von Rolle.</td></tr></tbody></table></div>
+<p>Pflichtheader für <code>POST /v1/orders</code>:</p>
+<pre class="code-block language-http"><code>Authorization: Bearer &lt;jwt&gt;
+X-Idempotency-Key: &lt;client-generated-key&gt;
+X-Correlation-Id: &lt;optional-client-correlation-id&gt;</code></pre>
+<p>Wenn kein <code>X-Correlation-Id</code> vorhanden ist, erzeugt der Shop-Service eine neue ID und gibt sie in der Antwort zurück.</p>
+<h2 id="datenmodell"><a class="anchor-link" href="#datenmodell" aria-label="Abschnitt verlinken">#</a>Datenmodell</h2>
+<h3 id="users"><a class="anchor-link" href="#users" aria-label="Abschnitt verlinken">#</a><code>users</code></h3>
+<div class="table-wrap"><table><thead><tr><th>Feld</th><th>Typ</th><th>Beschreibung</th></tr></thead><tbody><tr><td><code>id</code></td><td>UUID</td><td>Primärschlüssel.</td></tr><tr><td><code>email</code></td><td>Text, unique</td><td>Login-Identifier.</td></tr><tr><td><code>password_hash</code></td><td>Text</td><td>Hash, niemals Klartext.</td></tr><tr><td><code>display_name</code></td><td>Text</td><td>Anzeigename.</td></tr><tr><td><code>roles</code></td><td>Text[] oder Join-Tabelle</td><td>Rollen wie <code>CUSTOMER</code>, <code>ADMIN</code>, <code>LOGISTICS</code>.</td></tr><tr><td><code>created_at</code></td><td>Timestamp</td><td>Anlagezeitpunkt.</td></tr><tr><td><code>updated_at</code></td><td>Timestamp</td><td>Letzte Änderung.</td></tr></tbody></table></div>
+<h3 id="products"><a class="anchor-link" href="#products" aria-label="Abschnitt verlinken">#</a><code>products</code></h3>
+<div class="table-wrap"><table><thead><tr><th>Feld</th><th>Typ</th><th>Beschreibung</th></tr></thead><tbody><tr><td><code>id</code></td><td>UUID</td><td>Shop-weite Produkt-ID, wird auch an Warehouse gereicht.</td></tr><tr><td><code>sku</code></td><td>Text, unique</td><td>Fachliche Artikelnummer.</td></tr><tr><td><code>name</code></td><td>Text</td><td>Produktname.</td></tr><tr><td><code>description</code></td><td>Text</td><td>Beschreibung.</td></tr><tr><td><code>price_gross</code></td><td>Numeric</td><td>Bruttopreis.</td></tr><tr><td><code>currency</code></td><td>Char(3)</td><td>ISO-Währung, z. B. <code>EUR</code>.</td></tr><tr><td><code>active</code></td><td>Boolean</td><td>Sichtbarkeit im Katalog.</td></tr></tbody></table></div>
+<h3 id="baskets-und-basket-items"><a class="anchor-link" href="#baskets-und-basket-items" aria-label="Abschnitt verlinken">#</a><code>baskets</code> und <code>basket_items</code></h3>
+<p>Der Warenkorb ist persistent. Dadurch kann die Customer View nach Reload oder Login den Zustand wiederherstellen.</p>
+<p>Wichtige Regeln:</p>
+<ul><li>Pro Nutzer gibt es maximal einen aktiven Warenkorb.</li><li>Mengen müssen positiv sein.</li><li>Inaktive Produkte dürfen nicht neu hinzugefügt werden.</li><li>Beim Checkout werden Produktdaten als Order-Snapshot kopiert.</li></ul>
+<h3 id="orders-und-order-items"><a class="anchor-link" href="#orders-und-order-items" aria-label="Abschnitt verlinken">#</a><code>orders</code> und <code>order_items</code></h3>
+<div class="table-wrap"><table><thead><tr><th>Feld</th><th>Typ</th><th>Beschreibung</th></tr></thead><tbody><tr><td><code>id</code></td><td>UUID</td><td>Interne Order-ID.</td></tr><tr><td><code>correlation_id</code></td><td>UUID/Text</td><td>Prozessweite ID.</td></tr><tr><td><code>user_id</code></td><td>UUID</td><td>Bestellender Nutzer.</td></tr><tr><td><code>status</code></td><td>Text</td><td>Status aus dem Order-Statusmodell.</td></tr><tr><td><code>total_gross</code></td><td>Numeric</td><td>Gesamtbetrag.</td></tr><tr><td><code>currency</code></td><td>Char(3)</td><td>Währung.</td></tr><tr><td><code>idempotency_key</code></td><td>Text</td><td>Verknüpfung zum Request-Key.</td></tr><tr><td><code>created_at</code></td><td>Timestamp</td><td>Anlage.</td></tr><tr><td><code>completed_at</code></td><td>Timestamp nullable</td><td>Abschlusszeitpunkt.</td></tr></tbody></table></div>
+<h2 id="bestellstatusmodell"><a class="anchor-link" href="#bestellstatusmodell" aria-label="Abschnitt verlinken">#</a>Bestellstatusmodell</h2>
+<div class="table-wrap"><table><thead><tr><th>Status</th><th>Bedeutung</th><th>Endzustand</th></tr></thead><tbody><tr><td><code>CREATED</code></td><td>Bestellung lokal angelegt.</td><td>Nein</td></tr><tr><td><code>RESERVATION_PENDING</code></td><td>Warehouse-Reservierung wird ausgeführt.</td><td>Nein</td></tr><tr><td><code>RESERVED</code></td><td>Bestand ist temporär reserviert.</td><td>Nein</td></tr><tr><td><code>PAYMENT_PENDING</code></td><td>Zahlung wartet, z. B. auf Webhook.</td><td>Nein</td></tr><tr><td><code>PAYMENT_FAILED</code></td><td>Zahlung abgelehnt, Reservierung kompensiert.</td><td>Ja</td></tr><tr><td><code>OUT_OF_STOCK</code></td><td>Lagerbestand reicht nicht.</td><td>Ja</td></tr><tr><td><code>BOOKING_PENDING</code></td><td>Finale Ausbuchung läuft.</td><td>Nein</td></tr><tr><td><code>ROLLBACK_PENDING</code></td><td>Kompensation läuft.</td><td>Nein</td></tr><tr><td><code>ROLLBACK_COMPLETED</code></td><td>Kompensation nach Fehler abgeschlossen.</td><td>Ja</td></tr><tr><td><code>COMPLETED</code></td><td>Zahlung, Ausbuchung und Abschluss erfolgreich.</td><td>Ja</td></tr><tr><td><code>FAILED_REQUIRES_MANUAL_REVIEW</code></td><td>Unerwarteter Fehler nach Teilabschluss.</td><td>Ja, operativ zu prüfen</td></tr></tbody></table></div>
+<h2 id="saga-orchestrierung"><a class="anchor-link" href="#saga-orchestrierung" aria-label="Abschnitt verlinken">#</a>Saga-Orchestrierung</h2>
+<p>Der Shop-Service führt die Saga explizit als Zustandsmaschine aus. Jeder Schritt schreibt zunächst den lokalen Status, publiziert einen Audit-Snapshot und ruft dann den nächsten Service auf.</p>
+<p>Empfohlene Orchestrator-Schritte:</p>
+<ol><li>Request validieren und Idempotenz prüfen.</li><li>Warenkorb laden und Positionen einfrieren.</li><li>Order mit <code>CREATED</code> anlegen.</li><li>Status <code>RESERVATION_PENDING</code> setzen.</li><li>Warehouse-Reservierung aufrufen.</li><li>Bei Erfolg Status <code>RESERVED</code> setzen.</li><li>Billing-Charge aufrufen.</li><li>Bei synchronem Erfolg finale Warehouse-Buchung auslösen.</li><li>Bei <code>PENDING</code> Status <code>PAYMENT_PENDING</code> setzen und auf Webhook-Fortsetzung warten.</li><li>Bei Payment-Fehler Reservierung stornieren und <code>PAYMENT_FAILED</code> setzen.</li><li>Bei Booking-Erfolg <code>COMPLETED</code> setzen und Warenkorb leeren.</li><li>Bei Booking-Fehler Refund auslösen und <code>ROLLBACK_COMPLETED</code> setzen.</li></ol>
+<h2 id="idempotenzintegration"><a class="anchor-link" href="#idempotenzintegration" aria-label="Abschnitt verlinken">#</a>Idempotenzintegration</h2>
+<p>Der Shop-Service prüft bei <code>POST /v1/orders</code> den <code>X-Idempotency-Key</code> vor Beginn der Saga. Die Verarbeitung sollte drei Zustände kennen:</p>
+<div class="table-wrap"><table><thead><tr><th>Zustand</th><th>Verhalten</th></tr></thead><tbody><tr><td>Key unbekannt</td><td>Lock in Redis setzen und Verarbeitung starten.</td></tr><tr><td>Key in Bearbeitung</td><td><code>409</code> oder <code>202</code> mit Link auf Status zurückgeben.</td></tr><tr><td>Key abgeschlossen</td><td>Ursprüngliche Antwort aus Redis oder Datenbank erneut liefern.</td></tr></tbody></table></div>
+<p>Die Kombination aus <code>userId</code> und <code>idempotencyKey</code> muss eindeutig sein, damit zwei verschiedene Nutzer denselben zufälligen Key verwenden können, ohne sich zu blockieren.</p>
+<h2 id="audit-events-des-shop-service"><a class="anchor-link" href="#audit-events-des-shop-service" aria-label="Abschnitt verlinken">#</a>Audit-Events des Shop-Service</h2>
+<div class="table-wrap"><table><thead><tr><th>Event</th><th>Auslöser</th></tr></thead><tbody><tr><td><code>OrderCreated</code></td><td>Order lokal angelegt.</td></tr><tr><td><code>OrderReservationRequested</code></td><td>Warehouse-Reservierung wird gestartet.</td></tr><tr><td><code>OrderPaymentRequested</code></td><td>Billing-Charge wird gestartet.</td></tr><tr><td><code>OrderPaymentPending</code></td><td>Payment-Fassade liefert Pending.</td></tr><tr><td><code>OrderBookingRequested</code></td><td>Finale Lagerbuchung wird gestartet.</td></tr><tr><td><code>OrderCompleted</code></td><td>Saga erfolgreich abgeschlossen.</td></tr><tr><td><code>OrderFailedOutOfStock</code></td><td>Warehouse lehnt Reservierung ab.</td></tr><tr><td><code>OrderFailedPayment</code></td><td>Billing lehnt Zahlung ab.</td></tr><tr><td><code>OrderRollbackStarted</code></td><td>Kompensation nach Teilfehler beginnt.</td></tr><tr><td><code>OrderRollbackCompleted</code></td><td>Refund oder Reservierungsstorno abgeschlossen.</td></tr></tbody></table></div>
+<h2 id="validierungsregeln"><a class="anchor-link" href="#validierungsregeln" aria-label="Abschnitt verlinken">#</a>Validierungsregeln</h2>
+<ul><li>Warenkorb darf nicht leer sein.</li><li>Produkt muss aktiv sein.</li><li>Menge muss größer als <code>0</code> sein.</li><li>Währung aller Positionen muss identisch sein.</li><li>Nutzer muss Rolle <code>CUSTOMER</code> besitzen.</li><li><code>X-Idempotency-Key</code> ist für Bestellungen verpflichtend.</li><li>Preis-Snapshot wird beim Checkout fixiert.</li><li>Der Warenkorb wird erst nach erfolgreichem Saga-Abschluss geleert.</li></ul>
+<h2 id="fehlerfaelle"><a class="anchor-link" href="#fehlerfaelle" aria-label="Abschnitt verlinken">#</a>Fehlerfälle</h2>
+<div class="table-wrap"><table><thead><tr><th>Fehler</th><th>Reaktion</th></tr></thead><tbody><tr><td>Warenkorb leer</td><td><code>400</code> Problem Details, keine Saga.</td></tr><tr><td>Lager nicht ausreichend</td><td>Order <code>OUT_OF_STOCK</code>, keine Payment-Anfrage.</td></tr><tr><td>Payment abgelehnt</td><td>Reservierung stornieren, Order <code>PAYMENT_FAILED</code>.</td></tr><tr><td>Billing nicht erreichbar</td><td>Retry nach Policy, danach Kompensation und technischer Fehlerstatus.</td></tr><tr><td>Warehouse-Booking schlägt fehl</td><td>Refund auslösen, Order <code>ROLLBACK_COMPLETED</code>.</td></tr><tr><td>Audit-Service nicht erreichbar</td><td>Business-Prozess nicht blockieren, Event retrybar puffern.</td></tr></tbody></table></div>
+<h2 id="implementierungshinweise-fuer-nestjs"><a class="anchor-link" href="#implementierungshinweise-fuer-nestjs" aria-label="Abschnitt verlinken">#</a>Implementierungshinweise für NestJS</h2>
+<ul><li>Controller bleiben dünn und delegieren an Application Services.</li><li>Externe HTTP-Clients werden über Adapter gekapselt.</li><li>Rollenprüfung erfolgt über Guards und Decorators.</li><li>Transaktionen für lokale Order-Anlage laufen über Repository/ORM-Transaktionsmechanismen.</li><li>Saga-Schritte sollten explizit typisiert sein, nicht als lose String-Ketten.</li><li>Statuswechsel werden zentral validiert, damit unmögliche Übergänge auffallen.</li></ul>
+        </article>
+      </div>
+
+      <nav class="doc-pagination" aria-label="Kapitel wechseln">
+        <a class="button ghost" href="../architektur/02_systemarchitektur_kommunikation.html">Vorheriges Kapitel</a>
+        <a class="button" href="../../index.html#kapitel">Alle Kapitel</a>
+        <a class="button primary" href="04_service_warehouse.html">Nächstes Kapitel</a>
+      </nav>
+    </main>
+  </body>
+</html>

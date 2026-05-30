@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tests, Abnahme und Demo - Distributed E-Commerce Core</title>
+    <link rel="stylesheet" href="../../assets/styles.css" />
+  </head>
+  <body class="doc-page">
+    <a class="skip-link" href="#inhalt">Zum Inhalt springen</a>
+
+    <aside class="sidebar doc-sidebar" aria-label="Konzeptnavigation">
+      <a class="brand brand-link" href="../../index.html">
+        <span class="brand-mark">DEC</span>
+        <span>
+          <strong>Distributed E-Commerce Core</strong>
+          <small>HTML-Konzept</small>
+        </span>
+      </a>
+      <nav class="chapter-nav" aria-label="Kapitel">
+        <div class="chapter-nav-group"><p>Grundlagen</p><a href="../grundlagen/00_quickstart_und_leseweg.html"><span>00</span>Quickstart und Leseweg</a><a href="../grundlagen/01_anforderungen_ziele_scope.html"><span>01</span>Anforderungen, Ziele und Scope</a><a href="../grundlagen/01a_anforderungsdokument.html"><span>REQ</span>Anforderungsdokument</a></div><div class="chapter-nav-group"><p>Architektur</p><a href="../architektur/02_systemarchitektur_kommunikation.html"><span>02</span>Systemarchitektur und Kommunikation</a><a href="../architektur/07_saga_transaktionen_konsistenz.html"><span>07</span>Saga, Transaktionen und Konsistenz</a></div><div class="chapter-nav-group"><p>Services</p><a href="../services/03_service_shop.html"><span>03</span>Shop-Service</a><a href="../services/04_service_warehouse.html"><span>04</span>Warehouse-Service</a><a href="../services/05_service_billing_invoice.html"><span>05</span>Billing und Invoice</a><a href="../services/06_audit_service.html"><span>06</span>Audit-Service</a></div><div class="chapter-nav-group"><p>Qualität</p><a href="08_idempotenz_resilienz_security.html"><span>08</span>Idempotenz, Resilienz und Security</a><a href="10_observability_logging_tracing.html"><span>10</span>Observability, Logging und Tracing</a><a href="12_tests_abnahme_demo.html" aria-current="page"><span>12</span>Tests, Abnahme und Demo</a></div><div class="chapter-nav-group"><p>Frontends</p><a href="../frontends/09_frontends_simulationssuite.html"><span>09</span>Frontends und Simulationssuite</a></div><div class="chapter-nav-group"><p>Betrieb</p><a href="../betrieb/11_infrastruktur_deployment_repo.html"><span>11</span>Infrastruktur, Deployment und Repository</a></div><div class="chapter-nav-group"><p>Planung</p><a href="../planung/13_umsetzungsplan_roadmap.html"><span>13</span>Umsetzungsplan und Roadmap</a></div>
+      </nav>
+    <a class="sidebar-action" href="../../index.html">Zur Gesamtübersicht</a>
+    </aside>
+
+    <main id="inhalt" class="page-shell doc-shell">
+      <header class="doc-hero">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../../index.html">Übersicht</a>
+          <span>Qualität</span>
+          <span>Kapitel 12</span>
+        </nav>
+        <p class="eyebrow">Kapitel 12</p>
+        <h1>Tests, Abnahme und Demo</h1>
+        <p class="lead">Testpyramide, E2E-Szenarien, Contract Tests, Demo-Skript, Checkliste und Rest-Risiken.</p>
+        <div class="doc-actions">
+          <a class="button ghost" href="../betrieb/11_infrastruktur_deployment_repo.html">Vorheriges Kapitel</a>
+          <a class="button" href="../../12_tests_abnahme_demo.md">Markdown-Quelle</a>
+          <a class="button primary" href="../planung/13_umsetzungsplan_roadmap.html">Nächstes Kapitel</a>
+        </div>
+      </header>
+
+      
+<section class="diagram-section" aria-labelledby="diagram-tests-title">
+  <div class="section-heading compact-heading">
+    <p class="eyebrow">Diagramm</p>
+    <h2 id="diagram-tests-title">Testpyramide und Demo-Fokus</h2>
+  </div>
+  <div class="pyramid-diagram" role="img" aria-label="Testpyramide mit Unit, Integration, Contract, E2E und Demo Tests">
+    <div class="pyramid-level level-demo"><strong>Demo Tests</strong><span>Seeds, Simulation, Präsentationspfade</span></div>
+    <div class="pyramid-level level-e2e"><strong>E2E</strong><span>Happy Path, Payment-Fehler, Booking-Fehler</span></div>
+    <div class="pyramid-level level-contract"><strong>Contract</strong><span>Shop zu Warehouse, Billing, Events, Audit</span></div>
+    <div class="pyramid-level level-integration"><strong>Integration</strong><span>DB-Locking, Webhooks, RabbitMQ, Persistenz</span></div>
+    <div class="pyramid-level level-unit"><strong>Unit</strong><span>Statusmodelle, Validierung, Fassade</span></div>
+  </div>
+</section>
+
+
+      <div class="doc-layout">
+        <aside class="toc-card" aria-label="Inhaltsverzeichnis"><strong>Inhalt</strong><a class="toc-level-2" href="#testziel">Testziel</a><a class="toc-level-2" href="#testpyramide">Testpyramide</a><a class="toc-level-2" href="#unit-test-schwerpunkte">Unit-Test-Schwerpunkte</a><a class="toc-level-3" href="#shop-service">Shop-Service</a><a class="toc-level-3" href="#warehouse-service">Warehouse-Service</a><a class="toc-level-3" href="#billing-service">Billing-Service</a><a class="toc-level-3" href="#invoice-service">Invoice-Service</a><a class="toc-level-3" href="#audit-service">Audit-Service</a><a class="toc-level-2" href="#integrationstests">Integrationstests</a><a class="toc-level-2" href="#warehouse-concurrency-test">Warehouse-Concurrency-Test</a><a class="toc-level-2" href="#billing-webhook-test">Billing-Webhook-Test</a><a class="toc-level-2" href="#audit-persistenztest">Audit-Persistenztest</a><a class="toc-level-2" href="#e2e-szenarien">E2E-Szenarien</a><a class="toc-level-2" href="#szenario-1-happy-path">Szenario 1: Happy Path</a><a class="toc-level-2" href="#szenario-2-payment-abgelehnt">Szenario 2: Payment abgelehnt</a><a class="toc-level-2" href="#szenario-3-lager-nicht-ausreichend">Szenario 3: Lager nicht ausreichend</a><a class="toc-level-2" href="#szenario-4-warehouse-booking-schlaegt-fehl">Szenario 4: Warehouse-Booking schlägt fehl</a><a class="toc-level-2" href="#szenario-5-invoice-service-faellt-aus">Szenario 5: Invoice-Service fällt aus</a><a class="toc-level-2" href="#szenario-6-idempotenz">Szenario 6: Idempotenz</a><a class="toc-level-2" href="#szenario-7-concurrency">Szenario 7: Concurrency</a><a class="toc-level-2" href="#contract-tests">Contract Tests</a><a class="toc-level-2" href="#demo-skript">Demo-Skript</a><a class="toc-level-2" href="#abnahme-checkliste">Abnahme-Checkliste</a><a class="toc-level-2" href="#rest-risiken-fuer-die-abgabe">Rest-Risiken für die Abgabe</a></aside>
+        <article class="article-content">
+          <h1 id="tests-abnahme-und-demo-szenarien"><a class="anchor-link" href="#tests-abnahme-und-demo-szenarien" aria-label="Abschnitt verlinken">#</a>Tests, Abnahme und Demo-Szenarien</h1>
+<h2 id="testziel"><a class="anchor-link" href="#testziel" aria-label="Abschnitt verlinken">#</a>Testziel</h2>
+<p>Die Tests sollen nicht nur einzelne Funktionen prüfen, sondern die Architekturversprechen absichern: keine Doppelbestellungen, keine Überverkäufe, klare Kompensation, vollständige Audit-Historie und reproduzierbare Fehlerpfade.</p>
+<h2 id="testpyramide"><a class="anchor-link" href="#testpyramide" aria-label="Abschnitt verlinken">#</a>Testpyramide</h2>
+<div class="table-wrap"><table><thead><tr><th>Ebene</th><th>Zweck</th><th>Beispiele</th></tr></thead><tbody><tr><td>Unit Tests</td><td>Domänenlogik isoliert prüfen</td><td>Statusübergänge, Provider-Fassade, Validierung.</td></tr><tr><td>Integration Tests</td><td>Service plus Datenbank/Broker prüfen</td><td>Warehouse-Locking, Billing-Webhooks, Audit-Persistenz.</td></tr><tr><td>Contract Tests</td><td>Schnittstellen zwischen Services absichern</td><td>Shop zu Warehouse, Shop zu Billing.</td></tr><tr><td>E2E Tests</td><td>Vollständige Prozesse prüfen</td><td>Happy Path, Payment-Fehler, Booking-Fehler.</td></tr><tr><td>Demo Tests</td><td>Präsentationszustände vorbereiten</td><td>Seed, Simulation Panel, Grafana-Links.</td></tr></tbody></table></div>
+<h2 id="unit-test-schwerpunkte"><a class="anchor-link" href="#unit-test-schwerpunkte" aria-label="Abschnitt verlinken">#</a>Unit-Test-Schwerpunkte</h2>
+<h3 id="shop-service"><a class="anchor-link" href="#shop-service" aria-label="Abschnitt verlinken">#</a>Shop-Service</h3>
+<ul><li>Order-Statusübergänge.</li><li>Idempotency-Key-Konflikte.</li><li>Warenkorbvalidierung.</li><li>Rollenprüfung.</li><li>Saga-Entscheidungsmatrix.</li></ul>
+<h3 id="warehouse-service"><a class="anchor-link" href="#warehouse-service" aria-label="Abschnitt verlinken">#</a>Warehouse-Service</h3>
+<ul><li>Bestandsinvarianten.</li><li>Reservierung bei ausreichendem Bestand.</li><li>Ablehnung bei unzureichendem Bestand.</li><li>Storno idempotent.</li><li>Booking idempotent.</li></ul>
+<h3 id="billing-service"><a class="anchor-link" href="#billing-service" aria-label="Abschnitt verlinken">#</a>Billing-Service</h3>
+<ul><li>Provider-Auswahl per Konfiguration.</li><li>Mapping provider-spezifischer Fehler.</li><li>Refund nur nach erfolgreicher Zahlung.</li><li>Webhook-Deduplizierung.</li></ul>
+<h3 id="invoice-service"><a class="anchor-link" href="#invoice-service" aria-label="Abschnitt verlinken">#</a>Invoice-Service</h3>
+<ul><li>Rechnung wird nur einmal pro <code>correlationId</code> erzeugt.</li><li>Retry-Zähler.</li><li>Circuit-Breaker-Zustände.</li></ul>
+<h3 id="audit-service"><a class="anchor-link" href="#audit-service" aria-label="Abschnitt verlinken">#</a>Audit-Service</h3>
+<ul><li>Snapshot-Validierung.</li><li>Append-only Repository.</li><li>Sortierung nach Zeit.</li><li>Stream-Event-Format.</li></ul>
+<h2 id="integrationstests"><a class="anchor-link" href="#integrationstests" aria-label="Abschnitt verlinken">#</a>Integrationstests</h2>
+<h2 id="warehouse-concurrency-test"><a class="anchor-link" href="#warehouse-concurrency-test" aria-label="Abschnitt verlinken">#</a>Warehouse-Concurrency-Test</h2>
+<p>Ziel: Überverkauf verhindern.</p>
+<p>Setup:</p>
+<ul><li>Produkt <code>P1</code> mit <code>available_quantity = 1</code>.</li><li>Zwei parallele Reservierungsrequests mit unterschiedlicher <code>correlationId</code>.</li></ul>
+<p>Erwartung:</p>
+<ul><li>Genau eine Reservierung ist <code>ACTIVE</code>.</li><li>Eine Anfrage erhält <code>OUT_OF_STOCK</code>.</li><li><code>available_quantity = 0</code>.</li><li><code>reserved_quantity = 1</code>.</li><li>Keine negativen Mengen.</li></ul>
+<h2 id="billing-webhook-test"><a class="anchor-link" href="#billing-webhook-test" aria-label="Abschnitt verlinken">#</a>Billing-Webhook-Test</h2>
+<p>Ziel: asynchronen Provider korrekt verarbeiten.</p>
+<p>Setup:</p>
+<ul><li>Provider <code>async-webhook-sim</code>.</li><li>Webhook Delay kurz setzen.</li></ul>
+<p>Erwartung:</p>
+<ul><li>Initiale Charge liefert <code>PENDING</code>.</li><li>Webhook setzt Payment auf <code>SUCCEEDED</code>.</li><li>Event <code>PaymentSucceeded</code> wird publiziert.</li><li>Doppelter Webhook verändert den Payment-Status nicht erneut.</li></ul>
+<h2 id="audit-persistenztest"><a class="anchor-link" href="#audit-persistenztest" aria-label="Abschnitt verlinken">#</a>Audit-Persistenztest</h2>
+<p>Ziel: Snapshots unveränderlich und vollständig speichern.</p>
+<p>Setup:</p>
+<ul><li>Mehrere Events mit derselben <code>correlationId</code> einfügen.</li></ul>
+<p>Erwartung:</p>
+<ul><li>Timeline ist chronologisch sortiert.</li><li><code>previousEventId</code> ist gesetzt, soweit möglich.</li><li>Update/Delete-Pfade existieren nicht oder werden blockiert.</li></ul>
+<h2 id="e2e-szenarien"><a class="anchor-link" href="#e2e-szenarien" aria-label="Abschnitt verlinken">#</a>E2E-Szenarien</h2>
+<h2 id="szenario-1-happy-path"><a class="anchor-link" href="#szenario-1-happy-path" aria-label="Abschnitt verlinken">#</a>Szenario 1: Happy Path</h2>
+<p>Schritte:</p>
+<ol><li>Customer registrieren oder einloggen.</li><li>Produkt mit Bestand in Warenkorb legen.</li><li>Checkout mit neuem Idempotency-Key auslösen.</li><li>Warehouse reserviert.</li><li>Billing bestätigt Zahlung.</li><li>Invoice erzeugt Rechnung.</li><li>Warehouse bucht final aus.</li><li>Order endet in <code>COMPLETED</code>.</li></ol>
+<p>Abnahmekriterien:</p>
+<ul><li>Order-Status <code>COMPLETED</code>.</li><li>Payment-Status <code>SUCCEEDED</code>.</li><li>Reservierung <code>BOOKED</code>.</li><li>Rechnung existiert im Volume.</li><li>Audit-Timeline enthält alle Hauptschritte.</li><li>Logs sind per <code>correlationId</code> auffindbar.</li></ul>
+<h2 id="szenario-2-payment-abgelehnt"><a class="anchor-link" href="#szenario-2-payment-abgelehnt" aria-label="Abschnitt verlinken">#</a>Szenario 2: Payment abgelehnt</h2>
+<p>Schritte:</p>
+<ol><li>Simulation Panel setzt <code>FAIL_NEXT_PAYMENT</code>.</li><li>Customer startet Bestellung.</li><li>Warehouse reserviert erfolgreich.</li><li>Billing lehnt Zahlung ab.</li><li>Shop-Service storniert Reservierung.</li><li>Order endet in <code>PAYMENT_FAILED</code>.</li></ol>
+<p>Abnahmekriterien:</p>
+<ul><li>Keine aktive Reservierung bleibt übrig.</li><li>Bestand ist wieder frei.</li><li>Payment-Status <code>FAILED</code>.</li><li>Audit enthält <code>PaymentFailed</code> und <code>ReservationCancelled</code>.</li></ul>
+<h2 id="szenario-3-lager-nicht-ausreichend"><a class="anchor-link" href="#szenario-3-lager-nicht-ausreichend" aria-label="Abschnitt verlinken">#</a>Szenario 3: Lager nicht ausreichend</h2>
+<p>Schritte:</p>
+<ol><li>Produktbestand auf <code>0</code> setzen oder Menge größer als Bestand wählen.</li><li>Bestellung auslösen.</li><li>Warehouse lehnt Reservierung ab.</li><li>Order endet in <code>OUT_OF_STOCK</code>.</li></ol>
+<p>Abnahmekriterien:</p>
+<ul><li>Billing wurde nicht aufgerufen.</li><li>Keine Payment-Daten wurden erzeugt.</li><li>Audit zeigt Ablehnung.</li></ul>
+<h2 id="szenario-4-warehouse-booking-schlaegt-fehl"><a class="anchor-link" href="#szenario-4-warehouse-booking-schlaegt-fehl" aria-label="Abschnitt verlinken">#</a>Szenario 4: Warehouse-Booking schlägt fehl</h2>
+<p>Schritte:</p>
+<ol><li>Simulation Panel setzt <code>FAIL_NEXT_BOOKING</code>.</li><li>Bestellung starten.</li><li>Reservierung und Zahlung erfolgreich.</li><li>Finale Ausbuchung schlägt fehl.</li><li>Shop-Service löst Refund aus.</li><li>Order endet in <code>ROLLBACK_COMPLETED</code>.</li></ol>
+<p>Abnahmekriterien:</p>
+<ul><li>Payment wurde refunded.</li><li>Audit zeigt Booking-Fehler und Refund.</li><li>Order ist nicht <code>COMPLETED</code>.</li></ul>
+<h2 id="szenario-5-invoice-service-faellt-aus"><a class="anchor-link" href="#szenario-5-invoice-service-faellt-aus" aria-label="Abschnitt verlinken">#</a>Szenario 5: Invoice-Service fällt aus</h2>
+<p>Schritte:</p>
+<ol><li>Simulation Panel aktiviert Invoice-Fehler.</li><li>Bestellung erfolgreich bezahlen.</li><li>Invoice-Service schlägt dreimal fehl.</li><li>Circuit Breaker öffnet.</li><li>Order bleibt fachlich abgeschlossen.</li></ol>
+<p>Abnahmekriterien:</p>
+<ul><li>Payment wird nicht refunded.</li><li>Order bleibt <code>COMPLETED</code> oder abgeschlossen mit Invoice-Warnung.</li><li>Circuit-Breaker-Zustandswechsel ist auditierbar.</li><li>Retry-Versuche sind geloggt.</li></ul>
+<h2 id="szenario-6-idempotenz"><a class="anchor-link" href="#szenario-6-idempotenz" aria-label="Abschnitt verlinken">#</a>Szenario 6: Idempotenz</h2>
+<p>Schritte:</p>
+<ol><li>Zwei identische <code>POST /v1/orders</code> mit gleichem <code>X-Idempotency-Key</code> senden.</li><li>Optional zweiten Request während des ersten laufenden Prozesses senden.</li></ol>
+<p>Abnahmekriterien:</p>
+<ul><li>Nur eine Order wird erzeugt.</li><li>Nur eine Reservierung wird erzeugt.</li><li>Nur eine Zahlung wird ausgeführt.</li><li>Zweiter Request erhält gespeicherte Antwort oder <code>PROCESSING</code>-Status.</li></ul>
+<h2 id="szenario-7-concurrency"><a class="anchor-link" href="#szenario-7-concurrency" aria-label="Abschnitt verlinken">#</a>Szenario 7: Concurrency</h2>
+<p>Schritte:</p>
+<ol><li>Produktbestand auf <code>1</code> setzen.</li><li>Simulation Panel startet zwei parallele Bestellungen.</li><li>Admin Dashboard zeigt beide Timelines.</li></ol>
+<p>Abnahmekriterien:</p>
+<ul><li>Eine Bestellung wird fortgesetzt.</li><li>Eine Bestellung endet in <code>OUT_OF_STOCK</code>.</li><li>Bestand wird nicht negativ.</li><li>Logs zeigen Locking oder Warteverhalten.</li></ul>
+<h2 id="contract-tests"><a class="anchor-link" href="#contract-tests" aria-label="Abschnitt verlinken">#</a>Contract Tests</h2>
+<p>Wichtige Contracts:</p>
+<ul><li>Shop zu Warehouse: Reservation Request und Response.</li><li>Shop zu Billing: Charge und Refund.</li><li>Billing zu Shop oder Queue: Payment Update Event.</li><li>Billing zu Invoice: <code>PaymentSucceeded</code> Event.</li><li>Services zu Audit: Snapshot Payload.</li></ul>
+<p>Für jedes Contract-Payload sollte ein Beispiel in <code>docs/api.md</code> oder OpenAPI/AsyncAPI abgelegt werden.</p>
+<h2 id="demo-skript"><a class="anchor-link" href="#demo-skript" aria-label="Abschnitt verlinken">#</a>Demo-Skript</h2>
+<p>Eine gute Präsentation sollte in dieser Reihenfolge laufen:</p>
+<ol><li>Architekturübersicht zeigen.</li><li>Docker Compose und laufende Services zeigen.</li><li>Happy Path in Customer View auslösen.</li><li>Admin Timeline und Grafana zur <code>correlationId</code> öffnen.</li><li>Payment-Fehler auslösen und Kompensation erklären.</li><li>Booking-Fehler auslösen und Refund zeigen.</li><li>Concurrency-Test starten und Warehouse-Locking erklären.</li><li>Invoice-Ausfall starten und Circuit Breaker zeigen.</li><li>Kurzes Fazit: Warum keine verteilte ACID-Transaktion nötig ist.</li></ol>
+<h2 id="abnahme-checkliste"><a class="anchor-link" href="#abnahme-checkliste" aria-label="Abschnitt verlinken">#</a>Abnahme-Checkliste</h2>
+<ul><li>Alle Services starten reproduzierbar.</li><li>Alle Muss-Endpunkte existieren.</li><li>Fehlerantworten folgen RFC 7807.</li><li>Audit-Timelines sind vollständig.</li><li>Logs enthalten <code>correlationId</code>.</li><li>Idempotenztest besteht.</li><li>Concurrency-Test besteht.</li><li>Demo-Daten können zurückgesetzt werden.</li><li>README und <code>.env.example</code> sind aktuell.</li><li>Präsentationsszenarien sind dokumentiert.</li></ul>
+<h2 id="rest-risiken-fuer-die-abgabe"><a class="anchor-link" href="#rest-risiken-fuer-die-abgabe" aria-label="Abschnitt verlinken">#</a>Rest-Risiken für die Abgabe</h2>
+<div class="table-wrap"><table><thead><tr><th>Risiko</th><th>Frühwarnsignal</th><th>Gegenmaßnahme</th></tr></thead><tbody><tr><td>Zu viele Frontends, zu wenig Zeit</td><td>Backend noch instabil, UI wächst</td><td>Simulation und Admin zuerst priorisieren.</td></tr><tr><td>Webhook-Fortsetzung zu komplex</td><td>Pending-Sagas bleiben hängen</td><td>Klare Queue und Statusabfrage implementieren.</td></tr><tr><td>Concurrency-Test flaky</td><td>Ergebnis nicht deterministisch</td><td>DB-Locking-Test isoliert und wiederholbar bauen.</td></tr><tr><td>Audit überfrachtet</td><td>Payloads werden riesig</td><td>Payload-Schemas klein und versioniert halten.</td></tr><tr><td>Docker Compose instabil</td><td>Startreihenfolge bricht</td><td>Healthchecks und Retry beim Boot.</td></tr></tbody></table></div>
+        </article>
+      </div>
+
+      <nav class="doc-pagination" aria-label="Kapitel wechseln">
+        <a class="button ghost" href="../betrieb/11_infrastruktur_deployment_repo.html">Vorheriges Kapitel</a>
+        <a class="button" href="../../index.html#kapitel">Alle Kapitel</a>
+        <a class="button primary" href="../planung/13_umsetzungsplan_roadmap.html">Nächstes Kapitel</a>
+      </nav>
+    </main>
+  </body>
+</html>

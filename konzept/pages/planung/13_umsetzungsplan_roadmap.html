@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Umsetzungsplan und Roadmap - Distributed E-Commerce Core</title>
+    <link rel="stylesheet" href="../../assets/styles.css" />
+  </head>
+  <body class="doc-page">
+    <a class="skip-link" href="#inhalt">Zum Inhalt springen</a>
+
+    <aside class="sidebar doc-sidebar" aria-label="Konzeptnavigation">
+      <a class="brand brand-link" href="../../index.html">
+        <span class="brand-mark">DEC</span>
+        <span>
+          <strong>Distributed E-Commerce Core</strong>
+          <small>HTML-Konzept</small>
+        </span>
+      </a>
+      <nav class="chapter-nav" aria-label="Kapitel">
+        <div class="chapter-nav-group"><p>Grundlagen</p><a href="../grundlagen/00_quickstart_und_leseweg.html"><span>00</span>Quickstart und Leseweg</a><a href="../grundlagen/01_anforderungen_ziele_scope.html"><span>01</span>Anforderungen, Ziele und Scope</a><a href="../grundlagen/01a_anforderungsdokument.html"><span>REQ</span>Anforderungsdokument</a></div><div class="chapter-nav-group"><p>Architektur</p><a href="../architektur/02_systemarchitektur_kommunikation.html"><span>02</span>Systemarchitektur und Kommunikation</a><a href="../architektur/07_saga_transaktionen_konsistenz.html"><span>07</span>Saga, Transaktionen und Konsistenz</a></div><div class="chapter-nav-group"><p>Services</p><a href="../services/03_service_shop.html"><span>03</span>Shop-Service</a><a href="../services/04_service_warehouse.html"><span>04</span>Warehouse-Service</a><a href="../services/05_service_billing_invoice.html"><span>05</span>Billing und Invoice</a><a href="../services/06_audit_service.html"><span>06</span>Audit-Service</a></div><div class="chapter-nav-group"><p>Qualität</p><a href="../qualitaet/08_idempotenz_resilienz_security.html"><span>08</span>Idempotenz, Resilienz und Security</a><a href="../qualitaet/10_observability_logging_tracing.html"><span>10</span>Observability, Logging und Tracing</a><a href="../qualitaet/12_tests_abnahme_demo.html"><span>12</span>Tests, Abnahme und Demo</a></div><div class="chapter-nav-group"><p>Frontends</p><a href="../frontends/09_frontends_simulationssuite.html"><span>09</span>Frontends und Simulationssuite</a></div><div class="chapter-nav-group"><p>Betrieb</p><a href="../betrieb/11_infrastruktur_deployment_repo.html"><span>11</span>Infrastruktur, Deployment und Repository</a></div><div class="chapter-nav-group"><p>Planung</p><a href="13_umsetzungsplan_roadmap.html" aria-current="page"><span>13</span>Umsetzungsplan und Roadmap</a></div>
+      </nav>
+    <a class="sidebar-action" href="../../index.html">Zur Gesamtübersicht</a>
+    </aside>
+
+    <main id="inhalt" class="page-shell doc-shell">
+      <header class="doc-hero">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../../index.html">Übersicht</a>
+          <span>Planung</span>
+          <span>Kapitel 13</span>
+        </nav>
+        <p class="eyebrow">Kapitel 13</p>
+        <h1>Umsetzungsplan und Roadmap</h1>
+        <p class="lead">Phasenplan, Meilensteine, kritische Pfade, Risiken, Definition of Done und konkrete nächste Schritte.</p>
+        <div class="doc-actions">
+          <a class="button ghost" href="../qualitaet/12_tests_abnahme_demo.html">Vorheriges Kapitel</a>
+          <a class="button" href="../../13_umsetzungsplan_roadmap.md">Markdown-Quelle</a>
+          
+        </div>
+      </header>
+
+      
+
+      <div class="doc-layout">
+        <aside class="toc-card" aria-label="Inhaltsverzeichnis"><strong>Inhalt</strong><a class="toc-level-2" href="#priorisierungslogik">Priorisierungslogik</a><a class="toc-level-2" href="#phase-0-projektgrundlage">Phase 0: Projektgrundlage</a><a class="toc-level-2" href="#phase-1-shop-grundfunktionen">Phase 1: Shop-Grundfunktionen</a><a class="toc-level-2" href="#phase-2-warehouse-service">Phase 2: Warehouse-Service</a><a class="toc-level-2" href="#phase-3-billing-und-payment-fassade">Phase 3: Billing und Payment-Fassade</a><a class="toc-level-2" href="#phase-4-saga-ende-zu-ende">Phase 4: Saga-Ende-zu-Ende</a><a class="toc-level-2" href="#phase-5-audit-service">Phase 5: Audit-Service</a><a class="toc-level-2" href="#phase-6-invoice-service-und-resilienz">Phase 6: Invoice-Service und Resilienz</a><a class="toc-level-2" href="#phase-7-frontends">Phase 7: Frontends</a><a class="toc-level-2" href="#phase-8-observability-und-demo-finish">Phase 8: Observability und Demo-Finish</a><a class="toc-level-2" href="#minimal-viable-architecture">Minimal Viable Architecture</a><a class="toc-level-2" href="#meilensteine">Meilensteine</a><a class="toc-level-2" href="#verantwortlichkeitsschnitt">Verantwortlichkeitsschnitt</a><a class="toc-level-2" href="#kritische-pfade">Kritische Pfade</a><a class="toc-level-2" href="#risiko-und-gegenmassnahmenplan">Risiko- und Gegenmaßnahmenplan</a><a class="toc-level-2" href="#definition-of-done">Definition of Done</a><a class="toc-level-2" href="#empfohlene-naechste-konkrete-schritte">Empfohlene nächste konkrete Schritte</a></aside>
+        <article class="article-content">
+          <h1 id="umsetzungsplan-und-roadmap"><a class="anchor-link" href="#umsetzungsplan-und-roadmap" aria-label="Abschnitt verlinken">#</a>Umsetzungsplan und Roadmap</h1>
+<h2 id="priorisierungslogik"><a class="anchor-link" href="#priorisierungslogik" aria-label="Abschnitt verlinken">#</a>Priorisierungslogik</h2>
+<p>Das Projekt sollte zuerst den prüfbaren Kern liefern und danach Visualisierung und Bonusfunktionen ausbauen. Die zentrale Reihenfolge lautet:</p>
+<ol><li>Service-Schnittstellen und Datenmodelle stabilisieren.</li><li>Happy Path Ende-zu-Ende lauffähig machen.</li><li>Fehlerpfade und Kompensation implementieren.</li><li>Audit und Observability sichtbar machen.</li><li>Frontends und Simulation Panel für die Präsentation abrunden.</li></ol>
+<h2 id="phase-0-projektgrundlage"><a class="anchor-link" href="#phase-0-projektgrundlage" aria-label="Abschnitt verlinken">#</a>Phase 0: Projektgrundlage</h2>
+<p>Ziel: Repository, Tooling und lokale Infrastruktur stehen.</p>
+<p>Aufgaben:</p>
+<ul><li>Monorepo-Struktur anlegen.</li><li>Docker Compose mit PostgreSQL, Redis und RabbitMQ erstellen.</li><li>NestJS-Service-Grundgerüste erzeugen.</li><li>React-Frontend-Grundgerüste erzeugen.</li><li>Gemeinsame Lint-, Format- und Testkonvention definieren.</li><li><code>.env.example</code> erstellen.</li><li>Healthcheck-Endpunkte je Service anlegen.</li></ul>
+<p>Ergebnis:</p>
+<ul><li>Alle Services starten leer.</li><li>Infrastruktur ist erreichbar.</li><li>CI oder lokales Testkommando ist vorbereitet.</li></ul>
+<h2 id="phase-1-shop-grundfunktionen"><a class="anchor-link" href="#phase-1-shop-grundfunktionen" aria-label="Abschnitt verlinken">#</a>Phase 1: Shop-Grundfunktionen</h2>
+<p>Ziel: Nutzer, Produkte und Warenkorb funktionieren.</p>
+<p>Aufgaben:</p>
+<ul><li>Auth und JWT implementieren.</li><li>Rollenmodell einführen.</li><li>Produkt-CRUD für Admins.</li><li>Produktliste für Kunden.</li><li>Warenkorbmodell und Endpunkte.</li><li>Customer Storefront minimal anschließen.</li></ul>
+<p>Ergebnis:</p>
+<ul><li>Kunde kann Produkte sehen und Warenkorb befüllen.</li><li>Admin kann Produkt anlegen.</li><li>Rollen-Guards greifen.</li></ul>
+<h2 id="phase-2-warehouse-service"><a class="anchor-link" href="#phase-2-warehouse-service" aria-label="Abschnitt verlinken">#</a>Phase 2: Warehouse-Service</h2>
+<p>Ziel: Bestand, Reservierung und Concurrency sind korrekt.</p>
+<p>Aufgaben:</p>
+<ul><li>Warehouse-Datenmodell und Migrationen.</li><li>Produktbestand initialisieren.</li><li>Wareneingang-Endpunkt.</li><li>Reservierungsendpunkt mit <code>SELECT ... FOR UPDATE</code>.</li><li>Reservierungsstorno.</li><li>Finale Buchung.</li><li>Concurrency-Integrationstest.</li></ul>
+<p>Ergebnis:</p>
+<ul><li>Bestand kann nicht überverkauft werden.</li><li>Reservierung, Storno und Booking sind idempotent.</li></ul>
+<h2 id="phase-3-billing-und-payment-fassade"><a class="anchor-link" href="#phase-3-billing-und-payment-fassade" aria-label="Abschnitt verlinken">#</a>Phase 3: Billing und Payment-Fassade</h2>
+<p>Ziel: Zahlungsfluss ist über Provider-Fassade austauschbar.</p>
+<p>Aufgaben:</p>
+<ul><li>Payment-Datenmodell.</li><li>PaymentProvider-Interface.</li><li>Mindestens zwei Provider-Stubs.</li><li>Provider-Auswahl per Env.</li><li>Charge-Endpunkt.</li><li>Refund-Endpunkt.</li><li>MSW/Faker-Simulation.</li><li>Webhook-Endpunkt und asynchroner Provider.</li></ul>
+<p>Ergebnis:</p>
+<ul><li>Synchrone Zahlung funktioniert.</li><li>Payment-Ablehnung ist simulierbar.</li><li>Asynchroner Pending-Pfad funktioniert.</li></ul>
+<h2 id="phase-4-saga-ende-zu-ende"><a class="anchor-link" href="#phase-4-saga-ende-zu-ende" aria-label="Abschnitt verlinken">#</a>Phase 4: Saga-Ende-zu-Ende</h2>
+<p>Ziel: Shop-Service orchestriert Bestellung vollständig.</p>
+<p>Aufgaben:</p>
+<ul><li>Order-Datenmodell.</li><li>Saga-Orchestrator.</li><li>Idempotency-Middleware mit Redis.</li><li>Happy Path: Reserve, Charge, Book, Complete.</li><li>Fehlerpfad Payment abgelehnt.</li><li>Fehlerpfad Out of Stock.</li><li>Fehlerpfad Booking fehlgeschlagen mit Refund.</li><li>E2E-Tests.</li></ul>
+<p>Ergebnis:</p>
+<ul><li>Alle Kernprozesse laufen ohne Frontend manuell per API.</li><li>Statusmodell ist stabil.</li></ul>
+<h2 id="phase-5-audit-service"><a class="anchor-link" href="#phase-5-audit-service" aria-label="Abschnitt verlinken">#</a>Phase 5: Audit-Service</h2>
+<p>Ziel: Alle Zustandswechsel sind nachvollziehbar.</p>
+<p>Aufgaben:</p>
+<ul><li>Snapshot-Datenmodell.</li><li>Event-Ingestion per RabbitMQ oder HTTP.</li><li>Timeline-Endpunkt.</li><li>SSE-Stream.</li><li>Append-only-Schutz.</li><li>Services an Audit-Publishing anbinden.</li></ul>
+<p>Ergebnis:</p>
+<ul><li>Jede Demo-Bestellung hat eine vollständige Timeline.</li><li>Admin Dashboard kann Live-Daten anzeigen.</li></ul>
+<h2 id="phase-6-invoice-service-und-resilienz"><a class="anchor-link" href="#phase-6-invoice-service-und-resilienz" aria-label="Abschnitt verlinken">#</a>Phase 6: Invoice-Service und Resilienz</h2>
+<p>Ziel: Rechnungserstellung läuft asynchron und robust.</p>
+<p>Aufgaben:</p>
+<ul><li><code>PaymentSucceeded</code> Consumer.</li><li>PDF-Generierung.</li><li>Invoice-Volume.</li><li>Idempotente Verarbeitung.</li><li>Retry-Mechanismus.</li><li>Circuit Breaker.</li><li>Fehler- und Retry-Audit.</li></ul>
+<p>Ergebnis:</p>
+<ul><li>Rechnung entsteht nach Payment-Erfolg.</li><li>Invoice-Ausfall führt nicht zu Payment-Rollback.</li><li>Circuit Breaker ist demonstrierbar.</li></ul>
+<h2 id="phase-7-frontends"><a class="anchor-link" href="#phase-7-frontends" aria-label="Abschnitt verlinken">#</a>Phase 7: Frontends</h2>
+<p>Ziel: System wird bedienbar und präsentierbar.</p>
+<p>Priorität:</p>
+<ol><li>Admin Dashboard mit Timeline.</li><li>Simulation Panel.</li><li>Customer Storefront.</li><li>Warehouse WMS.</li></ol>
+<p>Begründung: Für die Bewertung sind Transparenz und Demo-Kontrolle oft wichtiger als ein vollständig polierter Storefront-Flow.</p>
+<p>Aufgaben:</p>
+<ul><li>Login und Rollennavigation.</li><li>Customer Produktliste, Warenkorb und Checkout.</li><li>Admin Order-Tabelle und Timeline.</li><li>WMS Bestand und Wareneingang.</li><li>Simulation Panel mit Fehler-Schaltern und Concurrency-Test.</li><li>Live-Updates über SSE.</li></ul>
+<p>Ergebnis:</p>
+<ul><li>Präsentationsszenarien sind ohne manuelle API-Tools ausführbar.</li></ul>
+<h2 id="phase-8-observability-und-demo-finish"><a class="anchor-link" href="#phase-8-observability-und-demo-finish" aria-label="Abschnitt verlinken">#</a>Phase 8: Observability und Demo-Finish</h2>
+<p>Ziel: Logs, Grafana und Demo-Skript sind rund.</p>
+<p>Aufgaben:</p>
+<ul><li>JSON-Logging in allen Services.</li><li><code>correlationId</code> konsequent weiterreichen.</li><li>Loki und Grafana in Compose integrieren.</li><li>Dashboard importieren.</li><li>Demo-Daten resetten können.</li><li>Demo-Skript finalisieren.</li><li>Abnahme-Checkliste durchlaufen.</li></ul>
+<p>Ergebnis:</p>
+<ul><li>Live-Demo zeigt Systemverhalten aus Nutzer-, Admin-, Lager- und Log-Sicht.</li></ul>
+<h2 id="minimal-viable-architecture"><a class="anchor-link" href="#minimal-viable-architecture" aria-label="Abschnitt verlinken">#</a>Minimal Viable Architecture</h2>
+<p>Falls die Zeit knapp wird, muss diese Minimalversion stehen:</p>
+<ul><li>Shop-, Warehouse-, Billing-, Audit-Service.</li><li>PostgreSQL pro Service.</li><li>Redis für Idempotenz.</li><li>RabbitMQ mindestens für Audit oder Invoice-Event.</li><li>Happy Path.</li><li>Payment-Fehler mit Reservierungsstorno.</li><li>Warehouse-Concurrency-Test.</li><li>Admin Timeline.</li><li>Docker Compose.</li></ul>
+<p>Invoice, WMS, Grafana und asynchrone Webhooks sind wichtig, aber nach dem Kern zu priorisieren.</p>
+<h2 id="meilensteine"><a class="anchor-link" href="#meilensteine" aria-label="Abschnitt verlinken">#</a>Meilensteine</h2>
+<div class="table-wrap"><table><thead><tr><th>Meilenstein</th><th>Kriterium</th></tr></thead><tbody><tr><td>M1 Infrastruktur</td><td>Alle leeren Services starten über Compose.</td></tr><tr><td>M2 Shop + Warehouse</td><td>Produkt, Bestand und Reservierung funktionieren.</td></tr><tr><td>M3 Billing</td><td>Charge und Refund über Fassade funktionieren.</td></tr><tr><td>M4 Saga</td><td>Happy Path und zwei Fehlerpfade bestehen als E2E-Test.</td></tr><tr><td>M5 Audit</td><td>Admin Timeline zeigt alle Events.</td></tr><tr><td>M6 Simulation</td><td>Fehler und Concurrency per UI auslösbar.</td></tr><tr><td>M7 Observability</td><td>Grafana zeigt Logs und Kennzahlen.</td></tr><tr><td>M8 Abgabe</td><td>Demo-Skript, Dokumentation und Tests vollständig.</td></tr></tbody></table></div>
+<h2 id="verantwortlichkeitsschnitt"><a class="anchor-link" href="#verantwortlichkeitsschnitt" aria-label="Abschnitt verlinken">#</a>Verantwortlichkeitsschnitt</h2>
+<p>Bei Teamarbeit bietet sich folgende Aufteilung an:</p>
+<div class="table-wrap"><table><thead><tr><th>Rolle</th><th>Schwerpunkt</th></tr></thead><tbody><tr><td>Backend 1</td><td>Shop-Service, Auth, Saga.</td></tr><tr><td>Backend 2</td><td>Warehouse, Concurrency, Tests.</td></tr><tr><td>Backend 3</td><td>Billing, Payment-Fassade, Invoice.</td></tr><tr><td>Backend 4 oder Shared</td><td>Audit, RabbitMQ, Observability.</td></tr><tr><td>Frontend</td><td>Customer, Admin, WMS, Simulation.</td></tr><tr><td>DevOps/Integration</td><td>Docker Compose, Seeds, Demo-Skript.</td></tr></tbody></table></div>
+<h2 id="kritische-pfade"><a class="anchor-link" href="#kritische-pfade" aria-label="Abschnitt verlinken">#</a>Kritische Pfade</h2>
+<p>Die riskantesten Abhängigkeiten sind:</p>
+<ul><li>Saga hängt von Warehouse und Billing ab.</li><li>Admin Dashboard hängt von Audit-Service ab.</li><li>Demo hängt von stabilen Seed-Daten ab.</li><li>Concurrency-Test hängt von echter Datenbanktransaktion ab.</li><li>Asynchroner Payment-Pfad hängt von Queue oder Fortsetzungsmechanismus ab.</li></ul>
+<p>Diese Pfade sollten früh vertikal getestet werden.</p>
+<h2 id="risiko-und-gegenmassnahmenplan"><a class="anchor-link" href="#risiko-und-gegenmassnahmenplan" aria-label="Abschnitt verlinken">#</a>Risiko- und Gegenmaßnahmenplan</h2>
+<div class="table-wrap"><table><thead><tr><th>Risiko</th><th>Auswirkung</th><th>Gegenmaßnahme</th></tr></thead><tbody><tr><td>Zu großer Scope</td><td>Kern bleibt unfertig</td><td>Minimal Viable Architecture priorisieren.</td></tr><tr><td>Fehlerpfade werden spät gebaut</td><td>Demo wirkt instabil</td><td>Payment- und Booking-Fehler ab Phase 4 integrieren.</td></tr><tr><td>Frontends blockieren Backend</td><td>Zeitverlust</td><td>Erst API und Admin Timeline, dann Storefront-Politur.</td></tr><tr><td>Queue-Komplexität steigt</td><td>Async-Pfade hängen</td><td>Klare Eventtypen, DLQ und kleine Payloads.</td></tr><tr><td>Docker-Probleme kurz vor Abgabe</td><td>Demo gefährdet</td><td>Compose ab Phase 0 pflegen und regelmäßig neu starten.</td></tr></tbody></table></div>
+<h2 id="definition-of-done"><a class="anchor-link" href="#definition-of-done" aria-label="Abschnitt verlinken">#</a>Definition of Done</h2>
+<p>Ein Feature gilt erst als fertig, wenn:</p>
+<ul><li>API implementiert und dokumentiert ist.</li><li>Validierung und Fehlerformat vorhanden sind.</li><li>Audit-Event geschrieben wird, falls zustandsrelevant.</li><li>Logs <code>correlationId</code> enthalten.</li><li>Mindestens ein sinnvoller Test existiert.</li><li>Docker-Compose-Ausführung weiterhin funktioniert.</li><li>Demo-Relevanz geprüft wurde.</li></ul>
+<h2 id="empfohlene-naechste-konkrete-schritte"><a class="anchor-link" href="#empfohlene-naechste-konkrete-schritte" aria-label="Abschnitt verlinken">#</a>Empfohlene nächste konkrete Schritte</h2>
+<ol><li>Repository-Grundstruktur erzeugen.</li><li>Docker Compose für Infrastruktur schreiben.</li><li>Shop-, Warehouse- und Billing-Service als leere NestJS-Apps starten.</li><li>Datenmodelle für Produkt, Bestand, Order und Payment festlegen.</li><li>Happy Path als API-only E2E-Test implementieren.</li><li>Danach erst Frontend-Views anbinden.</li></ol>
+        </article>
+      </div>
+
+      <nav class="doc-pagination" aria-label="Kapitel wechseln">
+        <a class="button ghost" href="../qualitaet/12_tests_abnahme_demo.html">Vorheriges Kapitel</a>
+        <a class="button" href="../../index.html#kapitel">Alle Kapitel</a>
+        
+      </nav>
+    </main>
+  </body>
+</html>

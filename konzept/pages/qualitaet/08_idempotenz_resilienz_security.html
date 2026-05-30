@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Idempotenz, Resilienz und Security - Distributed E-Commerce Core</title>
+    <link rel="stylesheet" href="../../assets/styles.css" />
+  </head>
+  <body class="doc-page">
+    <a class="skip-link" href="#inhalt">Zum Inhalt springen</a>
+
+    <aside class="sidebar doc-sidebar" aria-label="Konzeptnavigation">
+      <a class="brand brand-link" href="../../index.html">
+        <span class="brand-mark">DEC</span>
+        <span>
+          <strong>Distributed E-Commerce Core</strong>
+          <small>HTML-Konzept</small>
+        </span>
+      </a>
+      <nav class="chapter-nav" aria-label="Kapitel">
+        <div class="chapter-nav-group"><p>Grundlagen</p><a href="../grundlagen/00_quickstart_und_leseweg.html"><span>00</span>Quickstart und Leseweg</a><a href="../grundlagen/01_anforderungen_ziele_scope.html"><span>01</span>Anforderungen, Ziele und Scope</a><a href="../grundlagen/01a_anforderungsdokument.html"><span>REQ</span>Anforderungsdokument</a></div><div class="chapter-nav-group"><p>Architektur</p><a href="../architektur/02_systemarchitektur_kommunikation.html"><span>02</span>Systemarchitektur und Kommunikation</a><a href="../architektur/07_saga_transaktionen_konsistenz.html"><span>07</span>Saga, Transaktionen und Konsistenz</a></div><div class="chapter-nav-group"><p>Services</p><a href="../services/03_service_shop.html"><span>03</span>Shop-Service</a><a href="../services/04_service_warehouse.html"><span>04</span>Warehouse-Service</a><a href="../services/05_service_billing_invoice.html"><span>05</span>Billing und Invoice</a><a href="../services/06_audit_service.html"><span>06</span>Audit-Service</a></div><div class="chapter-nav-group"><p>Qualität</p><a href="08_idempotenz_resilienz_security.html" aria-current="page"><span>08</span>Idempotenz, Resilienz und Security</a><a href="10_observability_logging_tracing.html"><span>10</span>Observability, Logging und Tracing</a><a href="12_tests_abnahme_demo.html"><span>12</span>Tests, Abnahme und Demo</a></div><div class="chapter-nav-group"><p>Frontends</p><a href="../frontends/09_frontends_simulationssuite.html"><span>09</span>Frontends und Simulationssuite</a></div><div class="chapter-nav-group"><p>Betrieb</p><a href="../betrieb/11_infrastruktur_deployment_repo.html"><span>11</span>Infrastruktur, Deployment und Repository</a></div><div class="chapter-nav-group"><p>Planung</p><a href="../planung/13_umsetzungsplan_roadmap.html"><span>13</span>Umsetzungsplan und Roadmap</a></div>
+      </nav>
+    <a class="sidebar-action" href="../../index.html">Zur Gesamtübersicht</a>
+    </aside>
+
+    <main id="inhalt" class="page-shell doc-shell">
+      <header class="doc-hero">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../../index.html">Übersicht</a>
+          <span>Qualität</span>
+          <span>Kapitel 08</span>
+        </nav>
+        <p class="eyebrow">Kapitel 08</p>
+        <h1>Idempotenz, Resilienz und Security</h1>
+        <p class="lead">Redis-basierte Idempotenz, Retry-Strategien, Circuit Breaker, JWT, Guards, Secrets und Problem Details.</p>
+        <div class="doc-actions">
+          <a class="button ghost" href="../architektur/07_saga_transaktionen_konsistenz.html">Vorheriges Kapitel</a>
+          <a class="button" href="../../08_idempotenz_resilienz_security.md">Markdown-Quelle</a>
+          <a class="button primary" href="../frontends/09_frontends_simulationssuite.html">Nächstes Kapitel</a>
+        </div>
+      </header>
+
+      
+<section class="diagram-section" aria-labelledby="diagram-resilience-title">
+  <div class="section-heading compact-heading">
+    <p class="eyebrow">Diagramm</p>
+    <h2 id="diagram-resilience-title">Schutzschichten rund um die Saga</h2>
+  </div>
+  <div class="layer-diagram" role="img" aria-label="Schutzschichten Auth, Idempotenz, Retry, Circuit Breaker und Problem Details">
+    <div><strong>Auth &amp; Rollen</strong><span>JWT, Guards, Service-Grenzen</span></div>
+    <div><strong>Idempotenz</strong><span>Redis Lock, gespeicherte Antwort</span></div>
+    <div><strong>Retry</strong><span>nur idempotente Kommandos</span></div>
+    <div><strong>Circuit Breaker</strong><span>Invoice und externe Provider schützen</span></div>
+    <div><strong>Problem Details</strong><span>einheitliche Fehler für UIs und Tests</span></div>
+  </div>
+</section>
+
+
+      <div class="doc-layout">
+        <aside class="toc-card" aria-label="Inhaltsverzeichnis"><strong>Inhalt</strong><a class="toc-level-2" href="#ziel-dieses-kapitels">Ziel dieses Kapitels</a><a class="toc-level-2" href="#idempotenz-bei-post-v1-orders">Idempotenz bei POST /v1/orders</a><a class="toc-level-2" href="#idempotenz-key">Idempotenz-Key</a><a class="toc-level-2" href="#redis-basierter-ablauf">Redis-basierter Ablauf</a><a class="toc-level-2" href="#gespeicherte-idempotenzantwort">Gespeicherte Idempotenzantwort</a><a class="toc-level-2" href="#idempotenz-interner-endpunkte">Idempotenz interner Endpunkte</a><a class="toc-level-2" href="#retry-strategien">Retry-Strategien</a><a class="toc-level-2" href="#circuit-breaker-am-invoice-service">Circuit Breaker am Invoice-Service</a><a class="toc-level-2" href="#resilienz-bei-rabbitmq">Resilienz bei RabbitMQ</a><a class="toc-level-2" href="#authentifizierung">Authentifizierung</a><a class="toc-level-2" href="#autorisierung">Autorisierung</a><a class="toc-level-2" href="#guards-in-nestjs">Guards in NestJS</a><a class="toc-level-2" href="#interne-service-security">Interne Service-Security</a><a class="toc-level-2" href="#validierung-und-sanitizing">Validierung und Sanitizing</a><a class="toc-level-2" href="#problem-details">Problem Details</a><a class="toc-level-2" href="#secrets-und-konfiguration">Secrets und Konfiguration</a><a class="toc-level-2" href="#resilienz-abnahmekriterien">Resilienz-Abnahmekriterien</a></aside>
+        <article class="article-content">
+          <h1 id="idempotenz-resilienz-und-security"><a class="anchor-link" href="#idempotenz-resilienz-und-security" aria-label="Abschnitt verlinken">#</a>Idempotenz, Resilienz und Security</h1>
+<h2 id="ziel-dieses-kapitels"><a class="anchor-link" href="#ziel-dieses-kapitels" aria-label="Abschnitt verlinken">#</a>Ziel dieses Kapitels</h2>
+<p>Dieses Kapitel bündelt die technischen Querschnittsthemen, die den verteilten Bestellprozess stabil machen: Idempotenz gegen Doppelverarbeitung, Resilienz gegen Ausfälle und Security für Rollen, Tokens und interne Grenzen.</p>
+<h2 id="idempotenz-bei-post-v1-orders"><a class="anchor-link" href="#idempotenz-bei-post-v1-orders" aria-label="Abschnitt verlinken">#</a>Idempotenz bei <code>POST /v1/orders</code></h2>
+<p>Der kritischste externe Endpunkt ist <code>POST /v1/orders</code>. Nutzer können doppelt klicken, Browser können Requests wiederholen und Netzwerke können Antworten verlieren. Trotzdem darf dieselbe Bestellung nicht doppelt ausgeführt werden.</p>
+<h2 id="idempotenz-key"><a class="anchor-link" href="#idempotenz-key" aria-label="Abschnitt verlinken">#</a>Idempotenz-Key</h2>
+<p>Der Client sendet:</p>
+<pre class="code-block language-http"><code>X-Idempotency-Key: 7f4a2d12-f3c3-42f1-a1c2-4bd0e90f6f1b</code></pre>
+<p>Regeln:</p>
+<ul><li>Der Header ist verpflichtend.</li><li>Die Eindeutigkeit gilt pro Nutzer, nicht global.</li><li>Der Key wird für eine begrenzte Zeit gespeichert, z. B. 24 Stunden.</li><li>Der Request-Body-Hash wird mitgespeichert, damit derselbe Key nicht für andere Inhalte verwendet wird.</li></ul>
+<h2 id="redis-basierter-ablauf"><a class="anchor-link" href="#redis-basierter-ablauf" aria-label="Abschnitt verlinken">#</a>Redis-basierter Ablauf</h2>
+<p>Empfohlene Schlüssel:</p>
+<pre class="code-block language-text"><code>idempotency:{userId}:{key}:lock
+idempotency:{userId}:{key}:response
+idempotency:{userId}:{key}:requestHash</code></pre>
+<p>Ablauf:</p>
+<ol><li>Body normalisieren und Hash berechnen.</li><li>Prüfen, ob eine gespeicherte Antwort existiert.</li><li>Falls ja: Hash vergleichen und gespeicherte Antwort zurückgeben.</li><li>Falls nein: Lock per <code>SET NX PX</code> setzen.</li><li>Bei Lock-Erfolg: Saga starten.</li><li>Bei Lock-Konflikt: Statuslink oder <code>409</code> mit <code>PROCESSING</code> zurückgeben.</li><li>Nach Abschluss: Response und Request-Hash speichern.</li><li>Lock entfernen oder bis TTL auslaufen lassen.</li></ol>
+<h2 id="gespeicherte-idempotenzantwort"><a class="anchor-link" href="#gespeicherte-idempotenzantwort" aria-label="Abschnitt verlinken">#</a>Gespeicherte Idempotenzantwort</h2>
+<p>Die gespeicherte Antwort sollte enthalten:</p>
+<ul><li>HTTP-Status.</li><li>Response-Body.</li><li><code>correlationId</code>.</li><li>finaler oder aktueller Order-Status.</li><li>Zeitpunkt.</li><li>Request-Hash.</li></ul>
+<p>Dadurch kann der zweite Request wirklich dasselbe Ergebnis liefern, ohne die Saga erneut zu starten.</p>
+<h2 id="idempotenz-interner-endpunkte"><a class="anchor-link" href="#idempotenz-interner-endpunkte" aria-label="Abschnitt verlinken">#</a>Idempotenz interner Endpunkte</h2>
+<p>Auch interne Kommandos müssen wiederholbar sein, da Timeouts und Retries auftreten können.</p>
+<div class="table-wrap"><table><thead><tr><th>Endpunkt</th><th>Idempotenzregel</th></tr></thead><tbody><tr><td>Warehouse Reservation</td><td>Bestehende Reservierung zu <code>correlationId</code> zurückgeben.</td></tr><tr><td>Warehouse Cancel</td><td>Bereits stornierte Reservierung als Erfolg melden.</td></tr><tr><td>Warehouse Booking</td><td>Bereits gebuchte Reservierung als Erfolg melden.</td></tr><tr><td>Billing Charge</td><td>Bestehenden Payment-Datensatz zu <code>correlationId</code> zurückgeben.</td></tr><tr><td>Billing Refund</td><td>Bestehenden Refund zu <code>correlationId</code> zurückgeben.</td></tr><tr><td>Invoice Consumer</td><td>Bereits erzeugte Rechnung nicht erneut schreiben.</td></tr></tbody></table></div>
+<h2 id="retry-strategien"><a class="anchor-link" href="#retry-strategien" aria-label="Abschnitt verlinken">#</a>Retry-Strategien</h2>
+<p>Retries dürfen keine fachlichen Doppelwirkungen erzeugen. Deshalb gilt: erst Idempotenz, dann Retry.</p>
+<p>Empfohlene Policies:</p>
+<div class="table-wrap"><table><thead><tr><th>Operation</th><th>Retry</th><th>Backoff</th><th>Besonderheit</th></tr></thead><tbody><tr><td>Warehouse Reservation</td><td>1 bis 2</td><td>kurz, z. B. 100/300 ms</td><td>Nur bei technischen Fehlern, nicht bei <code>OUT_OF_STOCK</code>.</td></tr><tr><td>Billing Charge</td><td>1 bis 2</td><td>300/800 ms</td><td>Danach Statusabfrage, kein Blind-Double-Charge.</td></tr><tr><td>Billing Refund</td><td>3</td><td>500/1500/3000 ms</td><td>Bei endgültigem Fehler manuelle Prüfung.</td></tr><tr><td>Invoice Generation</td><td>3</td><td>1/5/15 s</td><td>Circuit Breaker schützt vor Dauerausfall.</td></tr><tr><td>Audit Publish</td><td>mehrere</td><td>exponentiell</td><td>Business-Prozess nicht dauerhaft blockieren.</td></tr></tbody></table></div>
+<h2 id="circuit-breaker-am-invoice-service"><a class="anchor-link" href="#circuit-breaker-am-invoice-service" aria-label="Abschnitt verlinken">#</a>Circuit Breaker am Invoice-Service</h2>
+<p>Der Invoice-Service kann ausfallen, ohne dass die Zahlung rückgängig gemacht wird. Ein Circuit Breaker verhindert, dass das System in schneller Folge weiter fehlerhafte Aufrufe versucht.</p>
+<p>Empfohlene Parameter:</p>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Wert</th></tr></thead><tbody><tr><td>Fehlergrenze</td><td>3 aufeinanderfolgende Fehler.</td></tr><tr><td>Open-Dauer</td><td>30 Sekunden.</td></tr><tr><td>Half-Open-Test</td><td>1 Testverarbeitung.</td></tr><tr><td>Retry pro Event</td><td>mindestens 3 Versuche.</td></tr><tr><td>Audit</td><td>Jeder Zustandswechsel wird als Snapshot gespeichert.</td></tr></tbody></table></div>
+<p>Zustände:</p>
+<ul><li><code>CLOSED</code>: Verarbeitung läuft normal.</li><li><code>OPEN</code>: Neue Verarbeitungen werden abgewiesen oder verzögert.</li><li><code>HALF_OPEN</code>: Einzelner Test entscheidet über Rückkehr zu <code>CLOSED</code>.</li></ul>
+<h2 id="resilienz-bei-rabbitmq"><a class="anchor-link" href="#resilienz-bei-rabbitmq" aria-label="Abschnitt verlinken">#</a>Resilienz bei RabbitMQ</h2>
+<p>Für RabbitMQ sollten genutzt werden:</p>
+<ul><li>Durable Exchanges und Queues.</li><li>Persistent Messages für kritische Events.</li><li>Dead-Letter-Queues für nicht verarbeitbare Nachrichten.</li><li>Consumer-Acks erst nach erfolgreicher Verarbeitung.</li><li>Reconnect-Logik bei Broker-Ausfall.</li></ul>
+<p>Empfohlene Queues:</p>
+<div class="table-wrap"><table><thead><tr><th>Queue</th><th>Consumer</th><th>Zweck</th></tr></thead><tbody><tr><td><code>invoice.payment-succeeded</code></td><td>Invoice-Service</td><td>Rechnungserstellung.</td></tr><tr><td><code>audit.domain-events</code></td><td>Audit-Service</td><td>Snapshot-Persistierung.</td></tr><tr><td><code>shop.payment-updates</code></td><td>Shop-Service</td><td>Fortsetzung asynchroner Payment-Sagas.</td></tr><tr><td><code>*.dlq</code></td><td>Admin/Debug</td><td>Fehlerhafte Nachrichten untersuchen.</td></tr></tbody></table></div>
+<h2 id="authentifizierung"><a class="anchor-link" href="#authentifizierung" aria-label="Abschnitt verlinken">#</a>Authentifizierung</h2>
+<p>Der Shop-Service stellt JWTs aus. Der Token enthält mindestens:</p>
+<pre class="code-block language-json"><code>{
+  &quot;sub&quot;: &quot;usr-123&quot;,
+  &quot;email&quot;: &quot;kunde@example.local&quot;,
+  &quot;roles&quot;: [&quot;CUSTOMER&quot;],
+  &quot;iat&quot;: 1780000000,
+  &quot;exp&quot;: 1780003600
+}</code></pre>
+<p>Sicherheitsregeln:</p>
+<ul><li>Passwörter werden mit einem sicheren Hashverfahren gespeichert.</li><li>JWT Secret kommt aus Umgebungsvariablen.</li><li>Token-Laufzeit ist begrenzt.</li><li>Rollen werden serverseitig geprüft, nicht nur im Frontend versteckt.</li><li>Admin- und Simulation-Endpunkte sind besonders restriktiv geschützt.</li></ul>
+<h2 id="autorisierung"><a class="anchor-link" href="#autorisierung" aria-label="Abschnitt verlinken">#</a>Autorisierung</h2>
+<div class="table-wrap"><table><thead><tr><th>Bereich</th><th>Rolle</th></tr></thead><tbody><tr><td>Bestellung auslösen</td><td><code>CUSTOMER</code></td></tr><tr><td>Eigene Bestellung ansehen</td><td><code>CUSTOMER</code></td></tr><tr><td>Alle Bestellungen ansehen</td><td><code>ADMIN</code></td></tr><tr><td>Produkt erstellen</td><td><code>ADMIN</code></td></tr><tr><td>Bestand ändern</td><td><code>LOGISTICS</code>, optional <code>ADMIN</code></td></tr><tr><td>Simulation starten</td><td><code>ADMIN</code></td></tr><tr><td>Audit-Timeline ansehen</td><td><code>ADMIN</code></td></tr></tbody></table></div>
+<h2 id="guards-in-nestjs"><a class="anchor-link" href="#guards-in-nestjs" aria-label="Abschnitt verlinken">#</a>Guards in NestJS</h2>
+<p>Empfohlene Struktur:</p>
+<ul><li><code>JwtAuthGuard</code> validiert Token.</li><li><code>RolesGuard</code> prüft Rollenmetadaten.</li><li><code>CorrelationIdInterceptor</code> stellt <code>X-Correlation-Id</code> sicher.</li><li><code>ProblemDetailsExceptionFilter</code> normalisiert Fehlerantworten.</li><li><code>IdempotencyInterceptor</code> oder Middleware schützt Order-Endpoint.</li></ul>
+<h2 id="interne-service-security"><a class="anchor-link" href="#interne-service-security" aria-label="Abschnitt verlinken">#</a>Interne Service-Security</h2>
+<p>Für das Uni-Projekt reicht meist Docker-Netzwerkisolation plus klare Portfreigaben. Trotzdem sollte das Konzept zeigen, dass interne Endpunkte nicht beliebig offen sind.</p>
+<p>Mögliche Maßnahmen:</p>
+<ul><li>Interne Services veröffentlichen keine Ports auf den Host, wenn nicht nötig.</li><li>Shop-Service nutzt interne Docker-DNS-Namen.</li><li>Interne Requests tragen ein Service-Token.</li><li>Webhook-Endpunkte prüfen simulierte Provider-Signaturen.</li><li>RabbitMQ-Zugangsdaten kommen aus <code>.env</code>.</li></ul>
+<h2 id="validierung-und-sanitizing"><a class="anchor-link" href="#validierung-und-sanitizing" aria-label="Abschnitt verlinken">#</a>Validierung und Sanitizing</h2>
+<ul><li>DTOs validieren Typen, Pflichtfelder, Minimal- und Maximalwerte.</li><li>Mengen sind Integer und positiv.</li><li>Geldbeträge werden als Decimal/Numeric behandelt.</li><li>IDs werden als UUID oder definierte Stringform validiert.</li><li>Fehlerdetails enthalten keine Secrets.</li><li>Logs maskieren Tokens, Zahlungsdaten und Passworthashes.</li></ul>
+<h2 id="problem-details"><a class="anchor-link" href="#problem-details" aria-label="Abschnitt verlinken">#</a>Problem Details</h2>
+<p>Alle Services geben Fehler in einheitlicher Form zurück. Typische Codes:</p>
+<div class="table-wrap"><table><thead><tr><th>Code</th><th>HTTP</th><th>Bedeutung</th></tr></thead><tbody><tr><td><code>VALIDATION_FAILED</code></td><td>400</td><td>Request ungültig.</td></tr><tr><td><code>UNAUTHORIZED</code></td><td>401</td><td>Kein gültiger Token.</td></tr><tr><td><code>FORBIDDEN</code></td><td>403</td><td>Rolle reicht nicht.</td></tr><tr><td><code>OUT_OF_STOCK</code></td><td>409</td><td>Lagerbestand nicht ausreichend.</td></tr><tr><td><code>IDEMPOTENCY_CONFLICT</code></td><td>409</td><td>Gleicher Key, anderer Request-Body.</td></tr><tr><td><code>PAYMENT_DECLINED</code></td><td>402 oder 409</td><td>Zahlung abgelehnt.</td></tr><tr><td><code>DEPENDENCY_UNAVAILABLE</code></td><td>503</td><td>Interner Zielservice nicht erreichbar.</td></tr><tr><td><code>MANUAL_REVIEW_REQUIRED</code></td><td>500/409</td><td>Kompensation unklar.</td></tr></tbody></table></div>
+<h2 id="secrets-und-konfiguration"><a class="anchor-link" href="#secrets-und-konfiguration" aria-label="Abschnitt verlinken">#</a>Secrets und Konfiguration</h2>
+<p>Niemals hartcodieren:</p>
+<ul><li>JWT Secret.</li><li>Datenbankpasswörter.</li><li>RabbitMQ-Zugangsdaten.</li><li>Redis-URL mit Passwort.</li><li>simulierte Provider-Signatur-Secrets.</li></ul>
+<p>Konfiguration gehört in <code>.env</code> und Docker-Compose-Environment. Für die Abgabe sollte eine <code>.env.example</code> ohne echte Secrets vorhanden sein.</p>
+<h2 id="resilienz-abnahmekriterien"><a class="anchor-link" href="#resilienz-abnahmekriterien" aria-label="Abschnitt verlinken">#</a>Resilienz-Abnahmekriterien</h2>
+<ul><li>Doppelter Order-Request erzeugt keine zweite Order.</li><li>Doppelte Webhooks erzeugen keine zweite Zahlung oder Rechnung.</li><li>Invoice-Ausfall öffnet den Circuit Breaker nach drei Fehlern.</li><li>Circuit-Breaker-Zustandswechsel erscheinen in Audit und Logs.</li><li>Technische Timeouts führen nicht zu Blind-Doppelbuchungen.</li><li>Simulation-Endpunkte sind nur mit Admin-Rolle erreichbar.</li></ul>
+        </article>
+      </div>
+
+      <nav class="doc-pagination" aria-label="Kapitel wechseln">
+        <a class="button ghost" href="../architektur/07_saga_transaktionen_konsistenz.html">Vorheriges Kapitel</a>
+        <a class="button" href="../../index.html#kapitel">Alle Kapitel</a>
+        <a class="button primary" href="../frontends/09_frontends_simulationssuite.html">Nächstes Kapitel</a>
+      </nav>
+    </main>
+  </body>
+</html>

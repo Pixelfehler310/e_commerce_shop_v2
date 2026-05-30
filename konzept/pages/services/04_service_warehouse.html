@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Warehouse-Service - Distributed E-Commerce Core</title>
+    <link rel="stylesheet" href="../../assets/styles.css" />
+  </head>
+  <body class="doc-page">
+    <a class="skip-link" href="#inhalt">Zum Inhalt springen</a>
+
+    <aside class="sidebar doc-sidebar" aria-label="Konzeptnavigation">
+      <a class="brand brand-link" href="../../index.html">
+        <span class="brand-mark">DEC</span>
+        <span>
+          <strong>Distributed E-Commerce Core</strong>
+          <small>HTML-Konzept</small>
+        </span>
+      </a>
+      <nav class="chapter-nav" aria-label="Kapitel">
+        <div class="chapter-nav-group"><p>Grundlagen</p><a href="../grundlagen/00_quickstart_und_leseweg.html"><span>00</span>Quickstart und Leseweg</a><a href="../grundlagen/01_anforderungen_ziele_scope.html"><span>01</span>Anforderungen, Ziele und Scope</a><a href="../grundlagen/01a_anforderungsdokument.html"><span>REQ</span>Anforderungsdokument</a></div><div class="chapter-nav-group"><p>Architektur</p><a href="../architektur/02_systemarchitektur_kommunikation.html"><span>02</span>Systemarchitektur und Kommunikation</a><a href="../architektur/07_saga_transaktionen_konsistenz.html"><span>07</span>Saga, Transaktionen und Konsistenz</a></div><div class="chapter-nav-group"><p>Services</p><a href="03_service_shop.html"><span>03</span>Shop-Service</a><a href="04_service_warehouse.html" aria-current="page"><span>04</span>Warehouse-Service</a><a href="05_service_billing_invoice.html"><span>05</span>Billing und Invoice</a><a href="06_audit_service.html"><span>06</span>Audit-Service</a></div><div class="chapter-nav-group"><p>Qualität</p><a href="../qualitaet/08_idempotenz_resilienz_security.html"><span>08</span>Idempotenz, Resilienz und Security</a><a href="../qualitaet/10_observability_logging_tracing.html"><span>10</span>Observability, Logging und Tracing</a><a href="../qualitaet/12_tests_abnahme_demo.html"><span>12</span>Tests, Abnahme und Demo</a></div><div class="chapter-nav-group"><p>Frontends</p><a href="../frontends/09_frontends_simulationssuite.html"><span>09</span>Frontends und Simulationssuite</a></div><div class="chapter-nav-group"><p>Betrieb</p><a href="../betrieb/11_infrastruktur_deployment_repo.html"><span>11</span>Infrastruktur, Deployment und Repository</a></div><div class="chapter-nav-group"><p>Planung</p><a href="../planung/13_umsetzungsplan_roadmap.html"><span>13</span>Umsetzungsplan und Roadmap</a></div>
+      </nav>
+    <a class="sidebar-action" href="../../index.html">Zur Gesamtübersicht</a>
+    </aside>
+
+    <main id="inhalt" class="page-shell doc-shell">
+      <header class="doc-hero">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../../index.html">Übersicht</a>
+          <span>Services</span>
+          <span>Kapitel 04</span>
+        </nav>
+        <p class="eyebrow">Kapitel 04</p>
+        <h1>Warehouse-Service</h1>
+        <p class="lead">Bestandsverwaltung, Reservierungen, finale Buchungen, Wareneingang, Locking und Concurrency-Tests.</p>
+        <div class="doc-actions">
+          <a class="button ghost" href="03_service_shop.html">Vorheriges Kapitel</a>
+          <a class="button" href="../../04_service_warehouse.md">Markdown-Quelle</a>
+          <a class="button primary" href="05_service_billing_invoice.html">Nächstes Kapitel</a>
+        </div>
+      </header>
+
+      
+
+      <div class="doc-layout">
+        <aside class="toc-card" aria-label="Inhaltsverzeichnis"><strong>Inhalt</strong><a class="toc-level-2" href="#rolle-im-gesamtsystem">Rolle im Gesamtsystem</a><a class="toc-level-2" href="#verantwortlichkeiten">Verantwortlichkeiten</a><a class="toc-level-2" href="#oeffentliche-interne-api">Öffentliche interne API</a><a class="toc-level-2" href="#datenmodell">Datenmodell</a><a class="toc-level-3" href="#warehouse-products">warehouse_products</a><a class="toc-level-3" href="#reservations">reservations</a><a class="toc-level-3" href="#reservation-items">reservation_items</a><a class="toc-level-3" href="#stock-movements">stock_movements</a><a class="toc-level-2" href="#reservierungsablauf">Reservierungsablauf</a><a class="toc-level-2" href="#pessimistic-locking">Pessimistic Locking</a><a class="toc-level-2" href="#storno-einer-reservierung">Storno einer Reservierung</a><a class="toc-level-2" href="#finale-buchung">Finale Buchung</a><a class="toc-level-2" href="#wareneingang-und-korrektur">Wareneingang und Korrektur</a><a class="toc-level-2" href="#fehler-und-simulation-modi">Fehler- und Simulation-Modi</a><a class="toc-level-2" href="#concurrency-test">Concurrency-Test</a><a class="toc-level-2" href="#audit-events">Audit-Events</a><a class="toc-level-2" href="#invarianten">Invarianten</a><a class="toc-level-2" href="#implementierungshinweise">Implementierungshinweise</a></aside>
+        <article class="article-content">
+          <h1 id="warehouse-service"><a class="anchor-link" href="#warehouse-service" aria-label="Abschnitt verlinken">#</a>Warehouse-Service</h1>
+<h2 id="rolle-im-gesamtsystem"><a class="anchor-link" href="#rolle-im-gesamtsystem" aria-label="Abschnitt verlinken">#</a>Rolle im Gesamtsystem</h2>
+<p>Der Warehouse-Service ist Eigentümer aller Lagerbestandsdaten. Er entscheidet, ob Ware verfügbar ist, reserviert Bestand temporär und bucht Ware nach erfolgreicher Zahlung endgültig aus. Seine wichtigste technische Aufgabe ist der Schutz vor Überverkäufen bei parallelen Bestellungen.</p>
+<h2 id="verantwortlichkeiten"><a class="anchor-link" href="#verantwortlichkeiten" aria-label="Abschnitt verlinken">#</a>Verantwortlichkeiten</h2>
+<ul><li>Produktbestände aus Warehouse-Sicht initialisieren.</li><li>Freien und reservierten Bestand verwalten.</li><li>Reservierungen atomar anlegen.</li><li>Reservierungen bei Zahlungsausfall stornieren.</li><li>Reservierte Ware nach erfolgreicher Zahlung final ausbuchen.</li><li>Wareneingänge durch <code>LOGISTICS</code> verarbeiten.</li><li>Nebenläufigkeit per PostgreSQL-Sperren kontrollieren.</li><li>Gezielte Fehler für Simulationen auslösen.</li><li>Audit-Events zu Reservierung, Storno und Buchung publizieren.</li></ul>
+<h2 id="oeffentliche-interne-api"><a class="anchor-link" href="#oeffentliche-interne-api" aria-label="Abschnitt verlinken">#</a>Öffentliche interne API</h2>
+<p>Der Warehouse-Service wird nicht direkt vom Customer Frontend aufgerufen. Zugriffe laufen über den Shop-Service oder kontrollierte interne Admin-Flows.</p>
+<div class="table-wrap"><table><thead><tr><th>Methode</th><th>Pfad</th><th>Rolle/Aufrufer</th><th>Beschreibung</th></tr></thead><tbody><tr><td><code>POST</code></td><td><code>/v1/warehouse/products</code></td><td>Shop-Service</td><td>Initialisiert Bestand für ein neues Produkt.</td></tr><tr><td><code>PATCH</code></td><td><code>/v1/warehouse/products/{productId}/stock</code></td><td><code>LOGISTICS</code></td><td>Bucht Wareneingang oder korrigiert Bestand.</td></tr><tr><td><code>GET</code></td><td><code>/v1/warehouse/products/{productId}/stock</code></td><td><code>LOGISTICS</code>, <code>ADMIN</code></td><td>Liefert freien, reservierten und gebuchten Bestand.</td></tr><tr><td><code>POST</code></td><td><code>/v1/warehouse/reservations</code></td><td>Shop-Service</td><td>Prüft und reserviert Bestand.</td></tr><tr><td><code>DELETE</code></td><td><code>/v1/warehouse/reservations/{correlationId}</code></td><td>Shop-Service</td><td>Storniert Reservierung.</td></tr><tr><td><code>POST</code></td><td><code>/v1/warehouse/bookings</code></td><td>Shop-Service</td><td>Bucht reservierte Ware endgültig aus.</td></tr><tr><td><code>POST</code></td><td><code>/v1/warehouse/simulation/failure-mode</code></td><td><code>ADMIN</code></td><td>Aktiviert einen einmaligen oder dauerhaften Fehlerzustand.</td></tr></tbody></table></div>
+<h2 id="datenmodell"><a class="anchor-link" href="#datenmodell" aria-label="Abschnitt verlinken">#</a>Datenmodell</h2>
+<h3 id="warehouse-products"><a class="anchor-link" href="#warehouse-products" aria-label="Abschnitt verlinken">#</a><code>warehouse_products</code></h3>
+<div class="table-wrap"><table><thead><tr><th>Feld</th><th>Typ</th><th>Beschreibung</th></tr></thead><tbody><tr><td><code>product_id</code></td><td>UUID</td><td>Produkt-ID aus dem Shop-Service.</td></tr><tr><td><code>sku</code></td><td>Text</td><td>Artikelnummer.</td></tr><tr><td><code>available_quantity</code></td><td>Integer</td><td>Frei verfügbarer Bestand.</td></tr><tr><td><code>reserved_quantity</code></td><td>Integer</td><td>Temporär reservierter Bestand.</td></tr><tr><td><code>booked_quantity</code></td><td>Integer</td><td>Historisch final ausgebuchte Menge.</td></tr><tr><td><code>version</code></td><td>Integer</td><td>Optional für zusätzliche Optimistic-Lock-Diagnose.</td></tr><tr><td><code>created_at</code></td><td>Timestamp</td><td>Anlage.</td></tr><tr><td><code>updated_at</code></td><td>Timestamp</td><td>Letzte Änderung.</td></tr></tbody></table></div>
+<h3 id="reservations"><a class="anchor-link" href="#reservations" aria-label="Abschnitt verlinken">#</a><code>reservations</code></h3>
+<div class="table-wrap"><table><thead><tr><th>Feld</th><th>Typ</th><th>Beschreibung</th></tr></thead><tbody><tr><td><code>id</code></td><td>UUID</td><td>Reservierungs-ID.</td></tr><tr><td><code>correlation_id</code></td><td>Text, unique</td><td>Prozess-ID der Bestellung.</td></tr><tr><td><code>status</code></td><td>Text</td><td><code>ACTIVE</code>, <code>CANCELLED</code>, <code>BOOKED</code>, <code>EXPIRED</code>.</td></tr><tr><td><code>created_at</code></td><td>Timestamp</td><td>Anlagezeit.</td></tr><tr><td><code>expires_at</code></td><td>Timestamp nullable</td><td>Optionales Ablaufdatum.</td></tr></tbody></table></div>
+<h3 id="reservation-items"><a class="anchor-link" href="#reservation-items" aria-label="Abschnitt verlinken">#</a><code>reservation_items</code></h3>
+<div class="table-wrap"><table><thead><tr><th>Feld</th><th>Typ</th><th>Beschreibung</th></tr></thead><tbody><tr><td><code>reservation_id</code></td><td>UUID</td><td>Referenz auf Reservierung.</td></tr><tr><td><code>product_id</code></td><td>UUID</td><td>Produkt.</td></tr><tr><td><code>quantity</code></td><td>Integer</td><td>Reservierte Menge.</td></tr></tbody></table></div>
+<h3 id="stock-movements"><a class="anchor-link" href="#stock-movements" aria-label="Abschnitt verlinken">#</a><code>stock_movements</code></h3>
+<p>Diese Tabelle dokumentiert Bewegungen aus Warehouse-Sicht:</p>
+<div class="table-wrap"><table><thead><tr><th>Feld</th><th>Typ</th><th>Beispiel</th></tr></thead><tbody><tr><td><code>id</code></td><td>UUID</td><td>Bewegungs-ID.</td></tr><tr><td><code>product_id</code></td><td>UUID</td><td>Betroffener Artikel.</td></tr><tr><td><code>movement_type</code></td><td>Text</td><td><code>INBOUND</code>, <code>RESERVED</code>, <code>RESERVATION_CANCELLED</code>, <code>BOOKED</code>.</td></tr><tr><td><code>quantity_delta</code></td><td>Integer</td><td><code>+10</code>, <code>-2</code>.</td></tr><tr><td><code>correlation_id</code></td><td>Text nullable</td><td>Bezug zur Bestellung.</td></tr><tr><td><code>created_by</code></td><td>Text</td><td>Service oder Nutzer.</td></tr><tr><td><code>created_at</code></td><td>Timestamp</td><td>Zeitpunkt.</td></tr></tbody></table></div>
+<h2 id="reservierungsablauf"><a class="anchor-link" href="#reservierungsablauf" aria-label="Abschnitt verlinken">#</a>Reservierungsablauf</h2>
+<p>Request:</p>
+<pre class="code-block language-json"><code>{
+  &quot;correlationId&quot;: &quot;ord-2026-0001&quot;,
+  &quot;items&quot;: [
+    { &quot;productId&quot;: &quot;prd-1&quot;, &quot;quantity&quot;: 1 },
+    { &quot;productId&quot;: &quot;prd-2&quot;, &quot;quantity&quot;: 2 }
+  ]
+}</code></pre>
+<p>Ablauf:</p>
+<ol><li><code>correlationId</code> auf bestehende aktive Reservierung prüfen.</li><li>Datenbanktransaktion starten.</li><li>Alle betroffenen Produktzeilen in stabiler Reihenfolge sperren.</li><li>Verfügbarkeit prüfen.</li><li>Falls Bestand reicht: <code>available_quantity</code> reduzieren und <code>reserved_quantity</code> erhöhen.</li><li>Reservierung und Positionen anlegen.</li><li>Stock Movements schreiben.</li><li>Transaktion committen.</li><li><code>ReservationCreated</code> publizieren.</li></ol>
+<h2 id="pessimistic-locking"><a class="anchor-link" href="#pessimistic-locking" aria-label="Abschnitt verlinken">#</a>Pessimistic Locking</h2>
+<p>Der kritische Abschnitt liegt vollständig in einer PostgreSQL-Transaktion. Die Produktzeilen werden mit <code>SELECT ... FOR UPDATE</code> gesperrt.</p>
+<p>Beispielhafte SQL-Strategie:</p>
+<pre class="code-block language-sql"><code>BEGIN;
+
+SELECT product_id, available_quantity, reserved_quantity
+FROM warehouse_products
+WHERE product_id = ANY($1)
+ORDER BY product_id
+FOR UPDATE;
+
+-- Verfügbarkeit in der Applikationslogik prüfen.
+-- Danach atomare Updates je Produkt ausführen.
+
+UPDATE warehouse_products
+SET available_quantity = available_quantity - $quantity,
+    reserved_quantity = reserved_quantity + $quantity,
+    updated_at = NOW()
+WHERE product_id = $productId;
+
+COMMIT;</code></pre>
+<p>Das <code>ORDER BY product_id</code> ist wichtig, wenn mehrere Produkte in einer Reservierung vorkommen. Es reduziert Deadlock-Risiken, weil konkurrierende Transaktionen Sperren in derselben Reihenfolge anfordern.</p>
+<h2 id="storno-einer-reservierung"><a class="anchor-link" href="#storno-einer-reservierung" aria-label="Abschnitt verlinken">#</a>Storno einer Reservierung</h2>
+<p><code>DELETE /v1/warehouse/reservations/{correlationId}</code> wird bei Zahlungsfehlern aufgerufen.</p>
+<p>Regeln:</p>
+<ul><li>Nur <code>ACTIVE</code>-Reservierungen können storniert werden.</li><li>Die zugehörigen Produktzeilen werden ebenfalls per <code>FOR UPDATE</code> gesperrt.</li><li><code>reserved_quantity</code> wird reduziert.</li><li><code>available_quantity</code> wird erhöht.</li><li>Reservierung erhält Status <code>CANCELLED</code>.</li><li>Operation ist idempotent: ein zweiter Storno liefert denselben fachlichen Erfolg, verändert aber keine Mengen erneut.</li></ul>
+<h2 id="finale-buchung"><a class="anchor-link" href="#finale-buchung" aria-label="Abschnitt verlinken">#</a>Finale Buchung</h2>
+<p><code>POST /v1/warehouse/bookings</code> bucht reservierte Ware endgültig aus.</p>
+<p>Regeln:</p>
+<ul><li>Nur <code>ACTIVE</code>-Reservierungen können gebucht werden.</li><li>Die Buchung reduziert <code>reserved_quantity</code>.</li><li><code>booked_quantity</code> wird erhöht.</li><li>Die Reservierung erhält Status <code>BOOKED</code>.</li><li>Bei aktivierter Fehlersimulation kann der Endpunkt vor dem Commit fehlschlagen.</li><li>Die Operation ist idempotent für dieselbe <code>correlationId</code>.</li></ul>
+<h2 id="wareneingang-und-korrektur"><a class="anchor-link" href="#wareneingang-und-korrektur" aria-label="Abschnitt verlinken">#</a>Wareneingang und Korrektur</h2>
+<p>Logistik-Mitarbeiter verwenden:</p>
+<pre class="code-block language-http"><code>PATCH /v1/warehouse/products/{productId}/stock</code></pre>
+<p>Request:</p>
+<pre class="code-block language-json"><code>{
+  &quot;quantityDelta&quot;: 15,
+  &quot;reason&quot;: &quot;INBOUND_DELIVERY&quot;,
+  &quot;reference&quot;: &quot;DEL-2026-05-29-001&quot;
+}</code></pre>
+<p>Regeln:</p>
+<ul><li>Positive Deltas erhöhen den freien Bestand.</li><li>Negative Deltas sind nur für Korrekturen erlaubt und dürfen den freien Bestand nicht unter <code>0</code> senken.</li><li>Jede Änderung erzeugt ein <code>StockAdjusted</code>-Audit-Event.</li><li>Der ausführende Nutzer wird im Movement gespeichert.</li></ul>
+<h2 id="fehler-und-simulation-modi"><a class="anchor-link" href="#fehler-und-simulation-modi" aria-label="Abschnitt verlinken">#</a>Fehler- und Simulation-Modi</h2>
+<div class="table-wrap"><table><thead><tr><th>Modus</th><th>Wirkung</th><th>Demo-Zweck</th></tr></thead><tbody><tr><td><code>FAIL_NEXT_BOOKING</code></td><td>Nächste finale Buchung schlägt fehl.</td><td>Refund-Kompensation demonstrieren.</td></tr><tr><td><code>DELAY_RESERVATION</code></td><td>Reservierung wird künstlich verzögert.</td><td>Idempotenz und UI-Loading testen.</td></tr><tr><td><code>FORCE_OUT_OF_STOCK</code></td><td>Reservierung wird abgelehnt.</td><td>Out-of-stock-Pfad demonstrieren.</td></tr><tr><td><code>LOCK_HOLD_MS</code></td><td>Transaktion hält Sperre bewusst länger.</td><td>Concurrency sichtbar machen.</td></tr></tbody></table></div>
+<p>Simulation-Modi müssen begrenzt sein. Ein einmaliger Fehler ist für Präsentationen sicherer als ein global dauerhaft kaputter Service.</p>
+<h2 id="concurrency-test"><a class="anchor-link" href="#concurrency-test" aria-label="Abschnitt verlinken">#</a>Concurrency-Test</h2>
+<p>Der wichtigste Nebenläufigkeitstest:</p>
+<ol><li>Produktbestand auf <code>1</code> setzen.</li><li>Zwei parallele Bestellungen für dasselbe Produkt starten.</li><li>Beide Requests erreichen <code>POST /v1/warehouse/reservations</code> nahezu gleichzeitig.</li><li>Die erste Transaktion sperrt die Zeile und reserviert den Bestand.</li><li>Die zweite Transaktion wartet, liest nach Commit den neuen Bestand <code>0</code> und lehnt sauber ab.</li><li>Ergebnis: genau eine Bestellung kann fortfahren, die andere endet mit <code>OUT_OF_STOCK</code>.</li></ol>
+<h2 id="audit-events"><a class="anchor-link" href="#audit-events" aria-label="Abschnitt verlinken">#</a>Audit-Events</h2>
+<div class="table-wrap"><table><thead><tr><th>Event</th><th>Inhalt</th></tr></thead><tbody><tr><td><code>WarehouseProductInitialized</code></td><td><code>productId</code>, <code>sku</code>, initialer Bestand.</td></tr><tr><td><code>StockAdjusted</code></td><td>Delta, Grund, Nutzer, neuer Bestand.</td></tr><tr><td><code>ReservationCreated</code></td><td>Positionen, Mengen, vorher/nachher Werte.</td></tr><tr><td><code>ReservationRejected</code></td><td>Produkt, angefragte Menge, verfügbarer Bestand.</td></tr><tr><td><code>ReservationCancelled</code></td><td>Freigegebene Mengen.</td></tr><tr><td><code>StockBooked</code></td><td>Final gebuchte Mengen.</td></tr><tr><td><code>WarehouseFailureInjected</code></td><td>Aktiver Simulationsmodus.</td></tr></tbody></table></div>
+<h2 id="invarianten"><a class="anchor-link" href="#invarianten" aria-label="Abschnitt verlinken">#</a>Invarianten</h2>
+<ul><li><code>available_quantity &gt;= 0</code>.</li><li><code>reserved_quantity &gt;= 0</code>.</li><li><code>booked_quantity &gt;= 0</code>.</li><li>Eine <code>correlationId</code> hat maximal eine aktive Reservierung.</li><li>Eine Reservierung kann nicht gleichzeitig <code>CANCELLED</code> und <code>BOOKED</code> sein.</li><li>Finale Buchung darf Bestand nicht aus <code>available_quantity</code> abbuchen, sondern nur aus <code>reserved_quantity</code>.</li></ul>
+<h2 id="implementierungshinweise"><a class="anchor-link" href="#implementierungshinweise" aria-label="Abschnitt verlinken">#</a>Implementierungshinweise</h2>
+<ul><li>Kritische Operationen laufen in einer Datenbanktransaktion.</li><li>Deadlocks werden geloggt und mit begrenztem Retry behandelt.</li><li>Sperren werden möglichst kurz gehalten.</li><li>Fehler nach Commit dürfen keine doppelten Mengenänderungen auslösen.</li><li>Alle Mengenoperationen sind integerbasiert, keine Gleitkommazahlen.</li><li>Idempotente Endpunkte prüfen zuerst vorhandene Reservierung oder Buchung zur <code>correlationId</code>.</li></ul>
+        </article>
+      </div>
+
+      <nav class="doc-pagination" aria-label="Kapitel wechseln">
+        <a class="button ghost" href="03_service_shop.html">Vorheriges Kapitel</a>
+        <a class="button" href="../../index.html#kapitel">Alle Kapitel</a>
+        <a class="button primary" href="05_service_billing_invoice.html">Nächstes Kapitel</a>
+      </nav>
+    </main>
+  </body>
+</html>

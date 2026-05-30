@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Saga, Transaktionen und Konsistenz - Distributed E-Commerce Core</title>
+    <link rel="stylesheet" href="../../assets/styles.css" />
+  </head>
+  <body class="doc-page">
+    <a class="skip-link" href="#inhalt">Zum Inhalt springen</a>
+
+    <aside class="sidebar doc-sidebar" aria-label="Konzeptnavigation">
+      <a class="brand brand-link" href="../../index.html">
+        <span class="brand-mark">DEC</span>
+        <span>
+          <strong>Distributed E-Commerce Core</strong>
+          <small>HTML-Konzept</small>
+        </span>
+      </a>
+      <nav class="chapter-nav" aria-label="Kapitel">
+        <div class="chapter-nav-group"><p>Grundlagen</p><a href="../grundlagen/00_quickstart_und_leseweg.html"><span>00</span>Quickstart und Leseweg</a><a href="../grundlagen/01_anforderungen_ziele_scope.html"><span>01</span>Anforderungen, Ziele und Scope</a><a href="../grundlagen/01a_anforderungsdokument.html"><span>REQ</span>Anforderungsdokument</a></div><div class="chapter-nav-group"><p>Architektur</p><a href="02_systemarchitektur_kommunikation.html"><span>02</span>Systemarchitektur und Kommunikation</a><a href="07_saga_transaktionen_konsistenz.html" aria-current="page"><span>07</span>Saga, Transaktionen und Konsistenz</a></div><div class="chapter-nav-group"><p>Services</p><a href="../services/03_service_shop.html"><span>03</span>Shop-Service</a><a href="../services/04_service_warehouse.html"><span>04</span>Warehouse-Service</a><a href="../services/05_service_billing_invoice.html"><span>05</span>Billing und Invoice</a><a href="../services/06_audit_service.html"><span>06</span>Audit-Service</a></div><div class="chapter-nav-group"><p>Qualität</p><a href="../qualitaet/08_idempotenz_resilienz_security.html"><span>08</span>Idempotenz, Resilienz und Security</a><a href="../qualitaet/10_observability_logging_tracing.html"><span>10</span>Observability, Logging und Tracing</a><a href="../qualitaet/12_tests_abnahme_demo.html"><span>12</span>Tests, Abnahme und Demo</a></div><div class="chapter-nav-group"><p>Frontends</p><a href="../frontends/09_frontends_simulationssuite.html"><span>09</span>Frontends und Simulationssuite</a></div><div class="chapter-nav-group"><p>Betrieb</p><a href="../betrieb/11_infrastruktur_deployment_repo.html"><span>11</span>Infrastruktur, Deployment und Repository</a></div><div class="chapter-nav-group"><p>Planung</p><a href="../planung/13_umsetzungsplan_roadmap.html"><span>13</span>Umsetzungsplan und Roadmap</a></div>
+      </nav>
+    <a class="sidebar-action" href="../../index.html">Zur Gesamtübersicht</a>
+    </aside>
+
+    <main id="inhalt" class="page-shell doc-shell">
+      <header class="doc-hero">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../../index.html">Übersicht</a>
+          <span>Architektur</span>
+          <span>Kapitel 07</span>
+        </nav>
+        <p class="eyebrow">Kapitel 07</p>
+        <h1>Saga, Transaktionen und Konsistenz</h1>
+        <p class="lead">Orchestrierte Saga, Happy Path, Fehlerpfade, Kompensationsmatrix, Zustandsmaschine und Invarianten.</p>
+        <div class="doc-actions">
+          <a class="button ghost" href="../services/06_audit_service.html">Vorheriges Kapitel</a>
+          <a class="button" href="../../07_saga_transaktionen_konsistenz.md">Markdown-Quelle</a>
+          <a class="button primary" href="../qualitaet/08_idempotenz_resilienz_security.html">Nächstes Kapitel</a>
+        </div>
+      </header>
+
+      
+<section class="diagram-section" aria-labelledby="diagram-saga-title">
+  <div class="section-heading compact-heading">
+    <p class="eyebrow">Diagramm</p>
+    <h2 id="diagram-saga-title">Saga-Fluss mit Kompensation</h2>
+    <p>Der Shop-Service entscheidet nach jedem lokalen Ergebnis, ob die Saga fortgesetzt, pausiert oder kompensiert wird.</p>
+  </div>
+    <div class="flow-diagram saga-flow" role="img" aria-label="Saga-Fluss von Order über Reservierung, Payment, Booking und Kompensation">
+    <div class="flow-step success"><span>1</span><strong>Order anlegen</strong><small>CREATED</small></div>
+    <div class="flow-step success"><span>2</span><strong>Bestand reservieren</strong><small>RESERVED oder OUT_OF_STOCK</small></div>
+    <div class="flow-step success"><span>3</span><strong>Payment starten</strong><small>SUCCEEDED, FAILED oder PENDING</small></div>
+    <div class="flow-step success"><span>4</span><strong>Final buchen</strong><small>BOOKED</small></div>
+    <div class="flow-step end"><span>5</span><strong>Order abschließen</strong><small>COMPLETED</small></div>
+    <div class="flow-branch warn"><strong>Payment fehlerhaft</strong><span>Reservierung stornieren -> PAYMENT_FAILED</span></div>
+    <div class="flow-branch warn"><strong>Booking fehlerhaft</strong><span>Refund auslösen -> ROLLBACK_COMPLETED</span></div>
+    <div class="flow-branch neutral"><strong>Provider pending</strong><span>Webhook setzt Saga später fort</span></div>
+  </div>
+</section>
+
+
+      <div class="doc-layout">
+        <aside class="toc-card" aria-label="Inhaltsverzeichnis"><strong>Inhalt</strong><a class="toc-level-2" href="#warum-eine-saga-notwendig-ist">Warum eine Saga notwendig ist</a><a class="toc-level-2" href="#orchestrierungsprinzip">Orchestrierungsprinzip</a><a class="toc-level-2" href="#happy-path">Happy Path</a><a class="toc-level-2" href="#happy-path-schritte-im-detail">Happy-Path-Schritte im Detail</a><a class="toc-level-2" href="#fehlerpfad-a-zahlung-abgelehnt">Fehlerpfad A: Zahlung abgelehnt</a><a class="toc-level-2" href="#fehlerpfad-b-lager-nicht-ausreichend">Fehlerpfad B: Lager nicht ausreichend</a><a class="toc-level-2" href="#fehlerpfad-c-finale-warehouse-ausbuchung-schlaegt-fehl">Fehlerpfad C: Finale Warehouse-Ausbuchung schlägt fehl</a><a class="toc-level-2" href="#asynchroner-payment-pfad">Asynchroner Payment-Pfad</a><a class="toc-level-2" href="#saga-zustandsmaschine">Saga-Zustandsmaschine</a><a class="toc-level-2" href="#statusuebergaenge-und-erlaubte-trigger">Statusübergänge und erlaubte Trigger</a><a class="toc-level-2" href="#kompensationsmatrix">Kompensationsmatrix</a><a class="toc-level-2" href="#zeitueberschreitungen">Zeitüberschreitungen</a><a class="toc-level-2" href="#idempotenz-in-der-saga">Idempotenz in der Saga</a><a class="toc-level-2" href="#konsistenzgarantien">Konsistenzgarantien</a><a class="toc-level-2" href="#audit-anforderungen-pro-saga">Audit-Anforderungen pro Saga</a><a class="toc-level-2" href="#testbare-invarianten">Testbare Invarianten</a></aside>
+        <article class="article-content">
+          <h1 id="saga-transaktionen-und-konsistenz"><a class="anchor-link" href="#saga-transaktionen-und-konsistenz" aria-label="Abschnitt verlinken">#</a>Saga, Transaktionen und Konsistenz</h1>
+<h2 id="warum-eine-saga-notwendig-ist"><a class="anchor-link" href="#warum-eine-saga-notwendig-ist" aria-label="Abschnitt verlinken">#</a>Warum eine Saga notwendig ist</h2>
+<p>Die Bestellung berührt mehrere Services mit eigener Datenhaltung. Eine klassische ACID-Transaktion über Shop-, Warehouse- und Billing-Datenbank wäre technisch falsch und architektonisch nicht gewollt. Stattdessen wird jeder Service lokal konsistent gehalten. Die Gesamtkonsistenz entsteht durch eine orchestrierte Saga mit klar definierten Kompensationsschritten.</p>
+<h2 id="orchestrierungsprinzip"><a class="anchor-link" href="#orchestrierungsprinzip" aria-label="Abschnitt verlinken">#</a>Orchestrierungsprinzip</h2>
+<p>Der Shop-Service ist der Saga-Orchestrator. Er kennt die Reihenfolge der Schritte und entscheidet bei Fehlern, welche Kompensation ausgelöst wird.</p>
+<p>Vorteile dieser Entscheidung:</p>
+<ul><li>Der Bestellprozess bleibt zentral nachvollziehbar.</li><li>Statuswechsel können im Shop-Service konsistent modelliert werden.</li><li>Fehlerpfade sind für Demo und Tests explizit auslösbar.</li><li>Frontends müssen nicht selbst mehrere Services koordinieren.</li></ul>
+<h2 id="happy-path"><a class="anchor-link" href="#happy-path" aria-label="Abschnitt verlinken">#</a>Happy Path</h2>
+<pre class="code-block language-mermaid"><code>sequenceDiagram
+    participant C as Customer UI
+    participant S as Shop-Service
+    participant W as Warehouse-Service
+    participant B as Billing-Service
+    participant Q as RabbitMQ
+    participant I as Invoice-Service
+    participant A as Audit-Service
+
+    C-&gt;&gt;S: POST /v1/orders
+    S-&gt;&gt;A: OrderCreated
+    S-&gt;&gt;W: POST /v1/warehouse/reservations
+    W-&gt;&gt;A: ReservationCreated
+    W--&gt;&gt;S: reserved
+    S-&gt;&gt;B: POST /v1/billing/charges
+    B-&gt;&gt;A: PaymentSucceeded
+    B-&gt;&gt;Q: PaymentSucceeded
+    Q-&gt;&gt;I: PaymentSucceeded
+    I-&gt;&gt;A: InvoiceGenerated
+    B--&gt;&gt;S: succeeded
+    S-&gt;&gt;W: POST /v1/warehouse/bookings
+    W-&gt;&gt;A: StockBooked
+    W--&gt;&gt;S: booked
+    S-&gt;&gt;A: OrderCompleted
+    S--&gt;&gt;C: 201 COMPLETED</code></pre>
+<h2 id="happy-path-schritte-im-detail"><a class="anchor-link" href="#happy-path-schritte-im-detail" aria-label="Abschnitt verlinken">#</a>Happy-Path-Schritte im Detail</h2>
+<div class="table-wrap"><table><thead><tr><th>Schritt</th><th>Owner</th><th>Lokale Transaktion</th><th>Ergebnis</th></tr></thead><tbody><tr><td>Request validieren</td><td>Shop</td><td>Nein</td><td>Fehlerhafte Requests werden abgelehnt.</td></tr><tr><td>Idempotenz-Key sperren</td><td>Shop/Redis</td><td>Redis-Operation</td><td>Nur ein Prozess verarbeitet den Key.</td></tr><tr><td>Order anlegen</td><td>Shop</td><td>Ja</td><td>Status <code>CREATED</code>.</td></tr><tr><td>Bestand reservieren</td><td>Warehouse</td><td>Ja</td><td>Bestand wird atomar von frei nach reserviert bewegt.</td></tr><tr><td>Zahlung starten</td><td>Billing</td><td>Ja</td><td>Payment wird gespeichert und Provider aufgerufen.</td></tr><tr><td>Rechnung anstoßen</td><td>Billing/RabbitMQ</td><td>Ja/Event</td><td><code>PaymentSucceeded</code> wird publiziert.</td></tr><tr><td>Bestand ausbuchen</td><td>Warehouse</td><td>Ja</td><td>Reservierung wird final gebucht.</td></tr><tr><td>Order abschließen</td><td>Shop</td><td>Ja</td><td>Status <code>COMPLETED</code>, Warenkorb wird geleert.</td></tr><tr><td>Idempotenzantwort speichern</td><td>Shop/Redis</td><td>Redis-Operation</td><td>Wiederholung erhält dieselbe Antwort.</td></tr></tbody></table></div>
+<h2 id="fehlerpfad-a-zahlung-abgelehnt"><a class="anchor-link" href="#fehlerpfad-a-zahlung-abgelehnt" aria-label="Abschnitt verlinken">#</a>Fehlerpfad A: Zahlung abgelehnt</h2>
+<p>Auslöser: Billing-Service oder Payment-Provider liefert <code>FAILED</code>.</p>
+<p>Kompensation:</p>
+<ol><li>Shop-Service setzt Order auf <code>ROLLBACK_PENDING</code> oder direkt in einen Payment-Fehlerpfad.</li><li>Shop-Service ruft <code>DELETE /v1/warehouse/reservations/{correlationId}</code> auf.</li><li>Warehouse gibt reservierte Mengen frei.</li><li>Warehouse publiziert <code>ReservationCancelled</code>.</li><li>Shop-Service setzt Order auf <code>PAYMENT_FAILED</code>.</li><li>Idempotenzantwort wird gespeichert.</li></ol>
+<p>Ergebnis:</p>
+<ul><li>Keine Zahlung ist offen.</li><li>Kein Bestand bleibt reserviert.</li><li>Die Bestellung bleibt auditierbar als fehlgeschlagen erhalten.</li></ul>
+<h2 id="fehlerpfad-b-lager-nicht-ausreichend"><a class="anchor-link" href="#fehlerpfad-b-lager-nicht-ausreichend" aria-label="Abschnitt verlinken">#</a>Fehlerpfad B: Lager nicht ausreichend</h2>
+<p>Auslöser: Warehouse-Service lehnt die Reservierung ab.</p>
+<p>Kompensation:</p>
+<ul><li>Keine Kompensation nötig, da noch kein nachfolgender Schritt ausgeführt wurde.</li></ul>
+<p>Ergebnis:</p>
+<ul><li>Order erhält Status <code>OUT_OF_STOCK</code>.</li><li>Billing wird nicht aufgerufen.</li><li>Audit enthält <code>ReservationRejected</code> und <code>OrderFailedOutOfStock</code>.</li></ul>
+<h2 id="fehlerpfad-c-finale-warehouse-ausbuchung-schlaegt-fehl"><a class="anchor-link" href="#fehlerpfad-c-finale-warehouse-ausbuchung-schlaegt-fehl" aria-label="Abschnitt verlinken">#</a>Fehlerpfad C: Finale Warehouse-Ausbuchung schlägt fehl</h2>
+<p>Auslöser: Zahlung war erfolgreich, aber <code>POST /v1/warehouse/bookings</code> schlägt fehl.</p>
+<p>Kompensation:</p>
+<ol><li>Shop-Service setzt Order auf <code>ROLLBACK_PENDING</code>.</li><li>Shop-Service ruft <code>POST /v1/billing/refunds</code> auf.</li><li>Billing-Service führt Refund über Payment-Fassade aus.</li><li>Billing publiziert <code>PaymentRefunded</code>.</li><li>Shop-Service setzt Order auf <code>ROLLBACK_COMPLETED</code>.</li><li>Falls nötig, wird die Reservierung zusätzlich storniert oder als technisch fehlgeschlagen markiert.</li></ol>
+<p>Ergebnis:</p>
+<ul><li>Kunde wird nicht belastet.</li><li>Audit zeigt Zahlung, Booking-Fehler und Refund.</li><li>Der Fall ist in der Demo besonders wertvoll, weil er echte Kompensation nach Teilabschluss zeigt.</li></ul>
+<h2 id="asynchroner-payment-pfad"><a class="anchor-link" href="#asynchroner-payment-pfad" aria-label="Abschnitt verlinken">#</a>Asynchroner Payment-Pfad</h2>
+<p>Wenn der Payment-Provider <code>PENDING</code> liefert, darf der Shop-Service nicht blockierend warten. Die Saga wird pausiert und später fortgesetzt.</p>
+<p>Ablauf:</p>
+<ol><li>Billing legt Payment mit Status <code>PENDING</code> an.</li><li>Shop-Service setzt Order auf <code>PAYMENT_PENDING</code>.</li><li>Client erhält <code>202 Accepted</code> oder <code>201</code> mit Pending-Status.</li><li>Payment-Stub sendet Webhook nach konfigurierter Verzögerung.</li><li>Billing aktualisiert Payment auf <code>SUCCEEDED</code> oder <code>FAILED</code>.</li><li>Billing publiziert ein Event.</li><li>Shop-Service konsumiert oder erhält die Fortsetzung und führt Booking oder Kompensation aus.</li></ol>
+<h2 id="saga-zustandsmaschine"><a class="anchor-link" href="#saga-zustandsmaschine" aria-label="Abschnitt verlinken">#</a>Saga-Zustandsmaschine</h2>
+<pre class="code-block language-mermaid"><code>stateDiagram-v2
+    [*] --&gt; CREATED
+    CREATED --&gt; RESERVATION_PENDING
+    RESERVATION_PENDING --&gt; RESERVED
+    RESERVATION_PENDING --&gt; OUT_OF_STOCK
+    RESERVED --&gt; PAYMENT_PENDING
+    RESERVED --&gt; BOOKING_PENDING
+    RESERVED --&gt; ROLLBACK_PENDING
+    PAYMENT_PENDING --&gt; BOOKING_PENDING
+    PAYMENT_PENDING --&gt; ROLLBACK_PENDING
+    BOOKING_PENDING --&gt; COMPLETED
+    BOOKING_PENDING --&gt; ROLLBACK_PENDING
+    ROLLBACK_PENDING --&gt; PAYMENT_FAILED
+    ROLLBACK_PENDING --&gt; ROLLBACK_COMPLETED
+    ROLLBACK_PENDING --&gt; FAILED_REQUIRES_MANUAL_REVIEW
+    OUT_OF_STOCK --&gt; [*]
+    PAYMENT_FAILED --&gt; [*]
+    ROLLBACK_COMPLETED --&gt; [*]
+    COMPLETED --&gt; [*]
+    FAILED_REQUIRES_MANUAL_REVIEW --&gt; [*]</code></pre>
+<h2 id="statusuebergaenge-und-erlaubte-trigger"><a class="anchor-link" href="#statusuebergaenge-und-erlaubte-trigger" aria-label="Abschnitt verlinken">#</a>Statusübergänge und erlaubte Trigger</h2>
+<div class="table-wrap"><table><thead><tr><th>Von</th><th>Nach</th><th>Trigger</th></tr></thead><tbody><tr><td><code>CREATED</code></td><td><code>RESERVATION_PENDING</code></td><td>Orchestrator startet Warehouse-Aufruf.</td></tr><tr><td><code>RESERVATION_PENDING</code></td><td><code>RESERVED</code></td><td>Warehouse reserviert erfolgreich.</td></tr><tr><td><code>RESERVATION_PENDING</code></td><td><code>OUT_OF_STOCK</code></td><td>Warehouse lehnt ab.</td></tr><tr><td><code>RESERVED</code></td><td><code>PAYMENT_PENDING</code></td><td>Billing liefert Pending.</td></tr><tr><td><code>RESERVED</code></td><td><code>BOOKING_PENDING</code></td><td>Billing liefert synchronen Erfolg.</td></tr><tr><td><code>RESERVED</code></td><td><code>ROLLBACK_PENDING</code></td><td>Billing liefert Fehler.</td></tr><tr><td><code>PAYMENT_PENDING</code></td><td><code>BOOKING_PENDING</code></td><td>Webhook meldet Erfolg.</td></tr><tr><td><code>PAYMENT_PENDING</code></td><td><code>ROLLBACK_PENDING</code></td><td>Webhook meldet Fehler.</td></tr><tr><td><code>BOOKING_PENDING</code></td><td><code>COMPLETED</code></td><td>Warehouse bucht final.</td></tr><tr><td><code>BOOKING_PENDING</code></td><td><code>ROLLBACK_PENDING</code></td><td>Warehouse-Booking scheitert.</td></tr><tr><td><code>ROLLBACK_PENDING</code></td><td><code>PAYMENT_FAILED</code></td><td>Reservierungsstorno nach Payment-Fehler erledigt.</td></tr><tr><td><code>ROLLBACK_PENDING</code></td><td><code>ROLLBACK_COMPLETED</code></td><td>Refund erledigt.</td></tr><tr><td><code>ROLLBACK_PENDING</code></td><td><code>FAILED_REQUIRES_MANUAL_REVIEW</code></td><td>Kompensation scheitert endgültig.</td></tr></tbody></table></div>
+<h2 id="kompensationsmatrix"><a class="anchor-link" href="#kompensationsmatrix" aria-label="Abschnitt verlinken">#</a>Kompensationsmatrix</h2>
+<div class="table-wrap"><table><thead><tr><th>Fehlerzeitpunkt</th><th>Bereits passiert</th><th>Kompensation</th><th>Endstatus</th></tr></thead><tbody><tr><td>Vor Order-Anlage</td><td>Nichts</td><td>Keine</td><td>Request-Fehler</td></tr><tr><td>Nach Order-Anlage, vor Reservierung</td><td>Order existiert</td><td>Status auf Fehler setzen</td><td><code>FAILED_REQUIRES_MANUAL_REVIEW</code> oder technischer Fehler</td></tr><tr><td>Reservierung abgelehnt</td><td>Order existiert</td><td>Keine</td><td><code>OUT_OF_STOCK</code></td></tr><tr><td>Zahlung abgelehnt</td><td>Reservierung aktiv</td><td>Reservierung stornieren</td><td><code>PAYMENT_FAILED</code></td></tr><tr><td>Payment-Webhook fehlgeschlagen</td><td>Reservierung aktiv</td><td>Reservierung stornieren</td><td><code>PAYMENT_FAILED</code></td></tr><tr><td>Booking fehlgeschlagen</td><td>Zahlung erfolgreich, Reservierung aktiv</td><td>Refund auslösen</td><td><code>ROLLBACK_COMPLETED</code></td></tr><tr><td>Refund fehlgeschlagen</td><td>Zahlung erfolgreich</td><td>Manuelle Prüfung</td><td><code>FAILED_REQUIRES_MANUAL_REVIEW</code></td></tr><tr><td>Invoice fehlgeschlagen</td><td>Order abgeschlossen, Zahlung erfolgreich</td><td>Kein Rollback, Retry</td><td><code>COMPLETED</code> mit Invoice-Warnung</td></tr></tbody></table></div>
+<h2 id="zeitueberschreitungen"><a class="anchor-link" href="#zeitueberschreitungen" aria-label="Abschnitt verlinken">#</a>Zeitüberschreitungen</h2>
+<p>Timeouts müssen fachlich eingeordnet werden. Ein Netzwerk-Timeout bedeutet nicht automatisch, dass der Zielservice nichts getan hat.</p>
+<p>Empfohlene Regeln:</p>
+<ul><li>Bei Warehouse-Reservierung nach Timeout über <code>correlationId</code> nachfragen oder idempotent wiederholen.</li><li>Bei Billing-Charge nach Timeout den Payment-Status prüfen, bevor ein neuer Charge erzeugt wird.</li><li>Bei Refund-Timeout den Refund-Status prüfen.</li><li>Bei Invoice-Timeout nur Retry und Circuit Breaker verwenden, kein Payment-Rollback.</li></ul>
+<h2 id="idempotenz-in-der-saga"><a class="anchor-link" href="#idempotenz-in-der-saga" aria-label="Abschnitt verlinken">#</a>Idempotenz in der Saga</h2>
+<p>Alle kritischen Kommandos müssen idempotent sein:</p>
+<div class="table-wrap"><table><thead><tr><th>Kommando</th><th>Idempotenzbasis</th></tr></thead><tbody><tr><td><code>POST /v1/orders</code></td><td><code>userId + X-Idempotency-Key</code>.</td></tr><tr><td><code>POST /v1/warehouse/reservations</code></td><td><code>correlationId</code>.</td></tr><tr><td><code>DELETE /v1/warehouse/reservations/{correlationId}</code></td><td><code>correlationId</code>.</td></tr><tr><td><code>POST /v1/warehouse/bookings</code></td><td><code>correlationId</code>.</td></tr><tr><td><code>POST /v1/billing/charges</code></td><td><code>correlationId</code>.</td></tr><tr><td><code>POST /v1/billing/refunds</code></td><td><code>correlationId</code>.</td></tr><tr><td>Invoice-Event-Verarbeitung</td><td><code>correlationId</code> oder <code>invoiceNumber</code>.</td></tr></tbody></table></div>
+<h2 id="konsistenzgarantien"><a class="anchor-link" href="#konsistenzgarantien" aria-label="Abschnitt verlinken">#</a>Konsistenzgarantien</h2>
+<p>Das System garantiert keine sofortige globale Konsistenz. Es garantiert:</p>
+<ul><li>Keine Überverkäufe im Warehouse.</li><li>Keine doppelte Bestellung bei gleichem Idempotenz-Key.</li><li>Keine doppelte Payment-Ausführung je <code>correlationId</code>.</li><li>Nachvollziehbare Kompensationsentscheidungen.</li><li>Endzustände, die operativ interpretierbar sind.</li></ul>
+<h2 id="audit-anforderungen-pro-saga"><a class="anchor-link" href="#audit-anforderungen-pro-saga" aria-label="Abschnitt verlinken">#</a>Audit-Anforderungen pro Saga</h2>
+<p>Jede Saga muss eine lückenlose Audit-Kette erzeugen:</p>
+<ul><li>Start der Order.</li><li>Start und Ergebnis der Reservierung.</li><li>Start und Ergebnis der Zahlung.</li><li>Pending-Zustände bei asynchronem Payment.</li><li>Start und Ergebnis des Bookings.</li><li>Start und Ergebnis jeder Kompensation.</li><li>Technische Fehler mit Service, Code und Kontext.</li></ul>
+<h2 id="testbare-invarianten"><a class="anchor-link" href="#testbare-invarianten" aria-label="Abschnitt verlinken">#</a>Testbare Invarianten</h2>
+<ul><li>Eine <code>COMPLETED</code>-Order hat eine erfolgreiche Zahlung und eine gebuchte Reservierung.</li><li>Eine <code>PAYMENT_FAILED</code>-Order hat keine aktive Reservierung.</li><li>Eine <code>OUT_OF_STOCK</code>-Order hat keinen Payment-Datensatz.</li><li>Eine <code>ROLLBACK_COMPLETED</code>-Order hat einen erfolgreichen Refund.</li><li>Eine Order mit <code>PAYMENT_PENDING</code> darf nicht final ausgebucht sein.</li><li>Jeder Endstatus besitzt mindestens einen Audit-Snapshot.</li></ul>
+        </article>
+      </div>
+
+      <nav class="doc-pagination" aria-label="Kapitel wechseln">
+        <a class="button ghost" href="../services/06_audit_service.html">Vorheriges Kapitel</a>
+        <a class="button" href="../../index.html#kapitel">Alle Kapitel</a>
+        <a class="button primary" href="../qualitaet/08_idempotenz_resilienz_security.html">Nächstes Kapitel</a>
+      </nav>
+    </main>
+  </body>
+</html>

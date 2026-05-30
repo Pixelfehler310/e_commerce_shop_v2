@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Anforderungen, Ziele und Scope - Distributed E-Commerce Core</title>
+    <link rel="stylesheet" href="../../assets/styles.css" />
+  </head>
+  <body class="doc-page">
+    <a class="skip-link" href="#inhalt">Zum Inhalt springen</a>
+
+    <aside class="sidebar doc-sidebar" aria-label="Konzeptnavigation">
+      <a class="brand brand-link" href="../../index.html">
+        <span class="brand-mark">DEC</span>
+        <span>
+          <strong>Distributed E-Commerce Core</strong>
+          <small>HTML-Konzept</small>
+        </span>
+      </a>
+      <nav class="chapter-nav" aria-label="Kapitel">
+        <div class="chapter-nav-group"><p>Grundlagen</p><a href="00_quickstart_und_leseweg.html"><span>00</span>Quickstart und Leseweg</a><a href="01_anforderungen_ziele_scope.html" aria-current="page"><span>01</span>Anforderungen, Ziele und Scope</a><a href="01a_anforderungsdokument.html"><span>REQ</span>Anforderungsdokument</a></div><div class="chapter-nav-group"><p>Architektur</p><a href="../architektur/02_systemarchitektur_kommunikation.html"><span>02</span>Systemarchitektur und Kommunikation</a><a href="../architektur/07_saga_transaktionen_konsistenz.html"><span>07</span>Saga, Transaktionen und Konsistenz</a></div><div class="chapter-nav-group"><p>Services</p><a href="../services/03_service_shop.html"><span>03</span>Shop-Service</a><a href="../services/04_service_warehouse.html"><span>04</span>Warehouse-Service</a><a href="../services/05_service_billing_invoice.html"><span>05</span>Billing und Invoice</a><a href="../services/06_audit_service.html"><span>06</span>Audit-Service</a></div><div class="chapter-nav-group"><p>Qualität</p><a href="../qualitaet/08_idempotenz_resilienz_security.html"><span>08</span>Idempotenz, Resilienz und Security</a><a href="../qualitaet/10_observability_logging_tracing.html"><span>10</span>Observability, Logging und Tracing</a><a href="../qualitaet/12_tests_abnahme_demo.html"><span>12</span>Tests, Abnahme und Demo</a></div><div class="chapter-nav-group"><p>Frontends</p><a href="../frontends/09_frontends_simulationssuite.html"><span>09</span>Frontends und Simulationssuite</a></div><div class="chapter-nav-group"><p>Betrieb</p><a href="../betrieb/11_infrastruktur_deployment_repo.html"><span>11</span>Infrastruktur, Deployment und Repository</a></div><div class="chapter-nav-group"><p>Planung</p><a href="../planung/13_umsetzungsplan_roadmap.html"><span>13</span>Umsetzungsplan und Roadmap</a></div>
+      </nav>
+    <a class="sidebar-action" href="../../index.html">Zur Gesamtübersicht</a>
+    </aside>
+
+    <main id="inhalt" class="page-shell doc-shell">
+      <header class="doc-hero">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../../index.html">Übersicht</a>
+          <span>Grundlagen</span>
+          <span>Kapitel 01</span>
+        </nav>
+        <p class="eyebrow">Kapitel 01</p>
+        <h1>Anforderungen, Ziele und Scope</h1>
+        <p class="lead">Fachliche und technische Ziele, Muss- und Soll-Anforderungen, Rollen, Nicht-Ziele und Abnahmekriterien.</p>
+        <div class="doc-actions">
+          <a class="button ghost" href="00_quickstart_und_leseweg.html">Vorheriges Kapitel</a>
+          <a class="button" href="../../01_anforderungen_ziele_scope.md">Markdown-Quelle</a>
+          <a class="button primary" href="01a_anforderungsdokument.html">Nächstes Kapitel</a>
+        </div>
+      </header>
+
+      
+
+      <div class="doc-layout">
+        <aside class="toc-card" aria-label="Inhaltsverzeichnis"><strong>Inhalt</strong><a class="toc-level-2" href="#fachliche-hauptziele">Fachliche Hauptziele</a><a class="toc-level-2" href="#technische-hauptziele">Technische Hauptziele</a><a class="toc-level-2" href="#muss-anforderungen">Muss-Anforderungen</a><a class="toc-level-2" href="#soll-anforderungen">Soll-Anforderungen</a><a class="toc-level-2" href="#bonus-und-praesentationsziele">Bonus- und Präsentationsziele</a><a class="toc-level-2" href="#rollen-und-rechte">Rollen und Rechte</a><a class="toc-level-2" href="#nicht-ziele">Nicht-Ziele</a><a class="toc-level-2" href="#qualitaetsattribute">Qualitätsattribute</a><a class="toc-level-2" href="#abnahmekriterien-auf-systemebene">Abnahmekriterien auf Systemebene</a></aside>
+        <article class="article-content">
+          <h1 id="anforderungen-ziele-und-scope"><a class="anchor-link" href="#anforderungen-ziele-und-scope" aria-label="Abschnitt verlinken">#</a>Anforderungen, Ziele und Scope</h1>
+<h2 id="fachliche-hauptziele"><a class="anchor-link" href="#fachliche-hauptziele" aria-label="Abschnitt verlinken">#</a>Fachliche Hauptziele</h2>
+<p>Das Projekt bildet einen verteilten E-Commerce-Kern ab. Der fachliche Fokus liegt auf einem vollständigen Bestellprozess von der Produktauswahl bis zur Rechnungserstellung. Dabei soll nicht nur der Happy Path funktionieren, sondern vor allem gezeigt werden, wie das System mit Fehlern, Wiederholungen, Nebenläufigkeit und asynchronen Ereignissen umgeht.</p>
+<p>Kernziele:</p>
+<ul><li>Kunden können Produkte sehen, einen Warenkorb pflegen und eine Bestellung auslösen.</li><li>Der Warenbestand wird reserviert, bezahlt und anschließend endgültig ausgebucht.</li><li>Zahlungen können erfolgreich sein, abgelehnt werden oder asynchron per Webhook bestätigt werden.</li><li>Rechnungen entstehen nach erfolgreicher Zahlung asynchron.</li><li>Administratoren können Bestellungen und Audit-Timelines einsehen.</li><li>Logistik-Mitarbeiter können Bestände verwalten und Wareneingänge buchen.</li><li>Präsentierende können Fehler- und Lastszenarien gezielt provozieren.</li></ul>
+<h2 id="technische-hauptziele"><a class="anchor-link" href="#technische-hauptziele" aria-label="Abschnitt verlinken">#</a>Technische Hauptziele</h2>
+<p>Das System soll die zentralen Konzepte verteilter Systeme sichtbar und prüfbar machen:</p>
+<ul><li>Microservice-Aufteilung mit klaren Ownership-Grenzen.</li><li>Eigene Persistenz pro Service.</li><li>Keine transaktionale Kopplung über Service-Grenzen hinweg.</li><li>Orchestrierte Saga für Bestellprozesse.</li><li>Kompensationslogik für fehlgeschlagene Teilprozesse.</li><li>Idempotente Bestellauslösung.</li><li>Pessimistic Locking im Warehouse-Service.</li><li>Asynchrone Kommunikation über RabbitMQ.</li><li>Strukturierte Logs mit <code>correlationId</code>.</li><li>Zentrale Visualisierung über Loki/Grafana.</li><li>Docker Compose als reproduzierbare Laufzeitumgebung.</li></ul>
+<h2 id="muss-anforderungen"><a class="anchor-link" href="#muss-anforderungen" aria-label="Abschnitt verlinken">#</a>Muss-Anforderungen</h2>
+<div class="table-wrap"><table><thead><tr><th>Bereich</th><th>Muss-Anforderung</th></tr></thead><tbody><tr><td>Architektur</td><td>Mindestens Shop-, Warehouse-, Billing-, Invoice- und Audit-Service.</td></tr><tr><td>Kommunikation</td><td>REST für synchrone Kernaufrufe, RabbitMQ für Events.</td></tr><tr><td>Datenhaltung</td><td>Eigene Datenbank oder eigenes Volume je Service.</td></tr><tr><td>Bestellprozess</td><td>Vollständiger Happy Path von Warenkorb bis Rechnung.</td></tr><tr><td>Fehlerbehandlung</td><td>Zahlung abgelehnt, Lager nicht ausreichend, Warehouse-Booking schlägt fehl.</td></tr><tr><td>Audit</td><td>Jeder Zustandsübergang wird unveränderlich gespeichert.</td></tr><tr><td>Idempotenz</td><td><code>POST /v1/orders</code> verarbeitet denselben Key nur einmal.</td></tr><tr><td>Concurrency</td><td>Warehouse verhindert Überverkauf bei parallelen Reservierungen.</td></tr><tr><td>Deployment</td><td>Start aller Komponenten über <code>docker-compose up</code>.</td></tr><tr><td>Dokumentation</td><td>Architektur, Schnittstellen, Entscheidungen und Demo-Abläufe sind nachvollziehbar dokumentiert.</td></tr></tbody></table></div>
+<h2 id="soll-anforderungen"><a class="anchor-link" href="#soll-anforderungen" aria-label="Abschnitt verlinken">#</a>Soll-Anforderungen</h2>
+<div class="table-wrap"><table><thead><tr><th>Bereich</th><th>Soll-Anforderung</th></tr></thead><tbody><tr><td>Frontend</td><td>Customer-, Admin-, Warehouse- und Simulation-View.</td></tr><tr><td>Payment</td><td>Anbieterwechsel per Umgebungsvariable.</td></tr><tr><td>Webhook</td><td>Mindestens ein Payment-Stub bestätigt asynchron.</td></tr><tr><td>Resilienz</td><td>Circuit Breaker und Retry für die Rechnungserstellung.</td></tr><tr><td>Observability</td><td>Grafana-Dashboard für Bestellzahlen, Fehler und Payment-Ergebnisse.</td></tr><tr><td>API-Qualität</td><td>Fehlerantworten nach RFC 7807.</td></tr><tr><td>Rollen</td><td><code>CUSTOMER</code>, <code>ADMIN</code>, <code>LOGISTICS</code>.</td></tr></tbody></table></div>
+<h2 id="bonus-und-praesentationsziele"><a class="anchor-link" href="#bonus-und-praesentationsziele" aria-label="Abschnitt verlinken">#</a>Bonus- und Präsentationsziele</h2>
+<p>Die Präsentation soll nicht nur behaupten, dass die Architektur robust ist. Sie soll das Verhalten live sichtbar machen:</p>
+<ul><li>Happy-Path-Bestellung mit Echtzeit-Audit-Timeline.</li><li>Payment-Ablehnung mit automatischer Stornierung der Reservierung.</li><li>Warehouse-Booking-Fehler mit Refund.</li><li>Invoice-Ausfall mit Circuit-Breaker-Zustandswechsel.</li><li>Concurrency-Test mit zwei parallelen Kaufversuchen auf knappen Bestand.</li><li>Webhook-Latenz-Simulation mit sichtbarem Zwischenstatus <code>PAYMENT_PENDING</code>.</li><li>Log-Dashboard mit Filterung nach <code>correlationId</code>.</li></ul>
+<h2 id="rollen-und-rechte"><a class="anchor-link" href="#rollen-und-rechte" aria-label="Abschnitt verlinken">#</a>Rollen und Rechte</h2>
+<div class="table-wrap"><table><thead><tr><th>Rolle</th><th>Darf</th></tr></thead><tbody><tr><td><code>CUSTOMER</code></td><td>Produkte ansehen, Warenkorb verwalten, Bestellung auslösen, Bestellstatus abrufen.</td></tr><tr><td><code>ADMIN</code></td><td>Produkte erstellen, Bestellungen einsehen, Audit-Timelines analysieren, Simulationen starten.</td></tr><tr><td><code>LOGISTICS</code></td><td>Lagerbestände sehen, Wareneingänge buchen, Bestand korrigieren.</td></tr></tbody></table></div>
+<h2 id="nicht-ziele"><a class="anchor-link" href="#nicht-ziele" aria-label="Abschnitt verlinken">#</a>Nicht-Ziele</h2>
+<p>Das Projekt soll bewusst nicht in Richtung einer vollständigen Produktionsplattform ausufern. Nicht-Ziele sind:</p>
+<ul><li>Keine echte Zahlungsabwicklung mit produktiven API-Schlüsseln.</li><li>Keine vollständige Mandantenfähigkeit.</li><li>Keine komplexe Versandlogistik mit Tracking, Retouren und Lieferdienstintegration.</li><li>Keine produktionsreife Finanzbuchhaltung.</li><li>Keine verteilte ACID-Transaktion über mehrere Datenbanken.</li><li>Keine direkte Datenbankintegration zwischen Services.</li></ul>
+<h2 id="qualitaetsattribute"><a class="anchor-link" href="#qualitaetsattribute" aria-label="Abschnitt verlinken">#</a>Qualitätsattribute</h2>
+<div class="table-wrap"><table><thead><tr><th>Attribut</th><th>Konkrete Erwartung</th></tr></thead><tbody><tr><td>Nachvollziehbarkeit</td><td>Jede Bestellung ist über <code>correlationId</code>, Audit-Snapshots und Logs rekonstruierbar.</td></tr><tr><td>Erweiterbarkeit</td><td>Neue Payment-Anbieter und Frontend-Views lassen sich ohne Kernumbau ergänzen.</td></tr><tr><td>Robustheit</td><td>Fehler führen zu definierten Status und Kompensationen.</td></tr><tr><td>Konsistenz</td><td>Bestand wird nie negativ und nicht doppelt verkauft.</td></tr><tr><td>Bedienbarkeit</td><td>Demo- und Admin-Views machen technische Zustände verständlich sichtbar.</td></tr><tr><td>Reproduzierbarkeit</td><td>Lokaler Start und Tests sind über dokumentierte Kommandos möglich.</td></tr></tbody></table></div>
+<h2 id="abnahmekriterien-auf-systemebene"><a class="anchor-link" href="#abnahmekriterien-auf-systemebene" aria-label="Abschnitt verlinken">#</a>Abnahmekriterien auf Systemebene</h2>
+<p>Ein Durchlauf gilt als erfolgreich abgenommen, wenn folgende Punkte erfüllt sind:</p>
+<ul><li>Alle Services starten über Docker Compose.</li><li>Eine Bestellung erzeugt konsistente Daten in Shop, Warehouse, Billing, Invoice und Audit.</li><li>Die Audit-Historie zeigt die Schritte in korrekter Reihenfolge.</li><li>Wiederholung desselben Order-Requests mit identischem Idempotency-Key erzeugt keine zweite Bestellung.</li><li>Zwei parallele Reservierungen bei Bestand <code>1</code> führen zu genau einer erfolgreichen Reservierung.</li><li>Fehlerpfade landen in klar definierten Endzuständen.</li><li>Grafana oder ein vergleichbares Dashboard zeigt nutzbare Metriken und Logs.</li></ul>
+        </article>
+      </div>
+
+      <nav class="doc-pagination" aria-label="Kapitel wechseln">
+        <a class="button ghost" href="00_quickstart_und_leseweg.html">Vorheriges Kapitel</a>
+        <a class="button" href="../../index.html#kapitel">Alle Kapitel</a>
+        <a class="button primary" href="01a_anforderungsdokument.html">Nächstes Kapitel</a>
+      </nav>
+    </main>
+  </body>
+</html>

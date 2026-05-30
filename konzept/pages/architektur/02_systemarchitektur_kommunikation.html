@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Systemarchitektur und Kommunikation - Distributed E-Commerce Core</title>
+    <link rel="stylesheet" href="../../assets/styles.css" />
+  </head>
+  <body class="doc-page">
+    <a class="skip-link" href="#inhalt">Zum Inhalt springen</a>
+
+    <aside class="sidebar doc-sidebar" aria-label="Konzeptnavigation">
+      <a class="brand brand-link" href="../../index.html">
+        <span class="brand-mark">DEC</span>
+        <span>
+          <strong>Distributed E-Commerce Core</strong>
+          <small>HTML-Konzept</small>
+        </span>
+      </a>
+      <nav class="chapter-nav" aria-label="Kapitel">
+        <div class="chapter-nav-group"><p>Grundlagen</p><a href="../grundlagen/00_quickstart_und_leseweg.html"><span>00</span>Quickstart und Leseweg</a><a href="../grundlagen/01_anforderungen_ziele_scope.html"><span>01</span>Anforderungen, Ziele und Scope</a><a href="../grundlagen/01a_anforderungsdokument.html"><span>REQ</span>Anforderungsdokument</a></div><div class="chapter-nav-group"><p>Architektur</p><a href="02_systemarchitektur_kommunikation.html" aria-current="page"><span>02</span>Systemarchitektur und Kommunikation</a><a href="07_saga_transaktionen_konsistenz.html"><span>07</span>Saga, Transaktionen und Konsistenz</a></div><div class="chapter-nav-group"><p>Services</p><a href="../services/03_service_shop.html"><span>03</span>Shop-Service</a><a href="../services/04_service_warehouse.html"><span>04</span>Warehouse-Service</a><a href="../services/05_service_billing_invoice.html"><span>05</span>Billing und Invoice</a><a href="../services/06_audit_service.html"><span>06</span>Audit-Service</a></div><div class="chapter-nav-group"><p>Qualität</p><a href="../qualitaet/08_idempotenz_resilienz_security.html"><span>08</span>Idempotenz, Resilienz und Security</a><a href="../qualitaet/10_observability_logging_tracing.html"><span>10</span>Observability, Logging und Tracing</a><a href="../qualitaet/12_tests_abnahme_demo.html"><span>12</span>Tests, Abnahme und Demo</a></div><div class="chapter-nav-group"><p>Frontends</p><a href="../frontends/09_frontends_simulationssuite.html"><span>09</span>Frontends und Simulationssuite</a></div><div class="chapter-nav-group"><p>Betrieb</p><a href="../betrieb/11_infrastruktur_deployment_repo.html"><span>11</span>Infrastruktur, Deployment und Repository</a></div><div class="chapter-nav-group"><p>Planung</p><a href="../planung/13_umsetzungsplan_roadmap.html"><span>13</span>Umsetzungsplan und Roadmap</a></div>
+      </nav>
+    <a class="sidebar-action" href="../../index.html">Zur Gesamtübersicht</a>
+    </aside>
+
+    <main id="inhalt" class="page-shell doc-shell">
+      <header class="doc-hero">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../../index.html">Übersicht</a>
+          <span>Architektur</span>
+          <span>Kapitel 02</span>
+        </nav>
+        <p class="eyebrow">Kapitel 02</p>
+        <h1>Systemarchitektur und Kommunikation</h1>
+        <p class="lead">Service-Landkarte, Datenhoheit, REST- und Event-Kommunikation, Header-Konventionen und Sicherheitsgrenzen.</p>
+        <div class="doc-actions">
+          <a class="button ghost" href="../grundlagen/01a_anforderungsdokument.html">Vorheriges Kapitel</a>
+          <a class="button" href="../../02_systemarchitektur_kommunikation.md">Markdown-Quelle</a>
+          <a class="button primary" href="../services/03_service_shop.html">Nächstes Kapitel</a>
+        </div>
+      </header>
+
+      
+<section class="diagram-section" aria-labelledby="diagram-architecture-title">
+  <div class="section-heading compact-heading">
+    <p class="eyebrow">Diagramm</p>
+    <h2 id="diagram-architecture-title">Service-Landkarte und Kommunikationswege</h2>
+    <p>Die Karte trennt Benutzerzugriff, synchrone Entscheidungsaufrufe und asynchrone Folgeprozesse.</p>
+  </div>
+  <figure class="diagram-card architecture-diagram">
+    <svg viewBox="0 0 980 520" role="img" aria-label="Architekturdiagramm mit Frontends, Shop, Warehouse, Billing, RabbitMQ, Invoice, Audit und Datenbanken">
+      <defs>
+        <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="currentColor" /></marker>
+      </defs>
+      <g class="diagram-zone"><rect x="24" y="32" width="222" height="420" rx="8"/><text x="44" y="64">Frontend-Zone</text></g>
+      <g class="diagram-zone"><rect x="292" y="32" width="398" height="420" rx="8"/><text x="312" y="64">Service-Zone</text></g>
+      <g class="diagram-zone"><rect x="736" y="32" width="220" height="420" rx="8"/><text x="756" y="64">Async &amp; Audit</text></g>
+      <g class="diagram-node blue"><rect x="54" y="112" width="162" height="56" rx="8"/><text x="135" y="146">Customer UI</text></g>
+      <g class="diagram-node blue"><rect x="54" y="190" width="162" height="56" rx="8"/><text x="135" y="224">Admin Dashboard</text></g>
+      <g class="diagram-node blue"><rect x="54" y="268" width="162" height="56" rx="8"/><text x="135" y="302">WMS</text></g>
+      <g class="diagram-node blue"><rect x="54" y="346" width="162" height="56" rx="8"/><text x="135" y="380">Simulation</text></g>
+      <g class="diagram-node teal strong"><rect x="398" y="128" width="188" height="72" rx="8"/><text x="492" y="158">Shop-Service</text><text x="492" y="180">Gateway + Saga</text></g>
+      <g class="diagram-node amber"><rect x="322" y="272" width="164" height="62" rx="8"/><text x="404" y="308">Warehouse</text></g>
+      <g class="diagram-node amber"><rect x="520" y="272" width="140" height="62" rx="8"/><text x="590" y="308">Billing</text></g>
+      <g class="diagram-node plum"><rect x="766" y="144" width="154" height="62" rx="8"/><text x="843" y="180">RabbitMQ</text></g>
+      <g class="diagram-node plum"><rect x="766" y="256" width="154" height="62" rx="8"/><text x="843" y="292">Invoice</text></g>
+      <g class="diagram-node dark"><rect x="766" y="354" width="154" height="62" rx="8"/><text x="843" y="390">Audit</text></g>
+      <path class="diagram-line" d="M216 140 H398" marker-end="url(#arrow)"/><path class="diagram-line" d="M216 218 C292 218 308 164 398 164" marker-end="url(#arrow)"/><path class="diagram-line" d="M216 296 C286 296 292 184 398 184" marker-end="url(#arrow)"/><path class="diagram-line" d="M216 374 C302 374 306 196 398 196" marker-end="url(#arrow)"/>
+      <path class="diagram-line sync" d="M452 200 V272" marker-end="url(#arrow)"/><path class="diagram-line sync" d="M550 200 L590 272" marker-end="url(#arrow)"/><path class="diagram-line async" d="M660 303 C714 303 718 175 766 175" marker-end="url(#arrow)"/><path class="diagram-line async" d="M843 206 V256" marker-end="url(#arrow)"/><path class="diagram-line async" d="M492 200 C620 224 650 384 766 384" marker-end="url(#arrow)"/><path class="diagram-line async" d="M404 334 C502 412 650 404 766 394" marker-end="url(#arrow)"/>
+      <text class="diagram-caption" x="318" y="252">REST synchron</text><text class="diagram-caption" x="664" y="144">Events</text><text class="diagram-caption" x="634" y="438">Snapshots</text>
+    </svg>
+  </figure>
+</section>
+
+
+      <div class="doc-layout">
+        <aside class="toc-card" aria-label="Inhaltsverzeichnis"><strong>Inhalt</strong><a class="toc-level-2" href="#architekturueberblick">Architekturüberblick</a><a class="toc-level-2" href="#service-landkarte">Service-Landkarte</a><a class="toc-level-2" href="#kommunikationsregeln">Kommunikationsregeln</a><a class="toc-level-2" href="#synchrone-kommunikation">Synchrone Kommunikation</a><a class="toc-level-2" href="#asynchrone-kommunikation">Asynchrone Kommunikation</a><a class="toc-level-2" href="#header-konventionen">Header-Konventionen</a><a class="toc-level-2" href="#fehlerformat-nach-rfc-7807">Fehlerformat nach RFC 7807</a><a class="toc-level-2" href="#datenhoheit">Datenhoheit</a><a class="toc-level-2" href="#konsistenzmodell">Konsistenzmodell</a><a class="toc-level-2" href="#sicherheitsgrenzen">Sicherheitsgrenzen</a><a class="toc-level-2" href="#technologiestack">Technologiestack</a></aside>
+        <article class="article-content">
+          <h1 id="systemarchitektur-und-kommunikation"><a class="anchor-link" href="#systemarchitektur-und-kommunikation" aria-label="Abschnitt verlinken">#</a>Systemarchitektur und Kommunikation</h1>
+<h2 id="architekturueberblick"><a class="anchor-link" href="#architekturueberblick" aria-label="Abschnitt verlinken">#</a>Architekturüberblick</h2>
+<p>Die Systemlandschaft besteht aus fünf Backend-Services, mehreren Datenhaltungen, einer Message Queue und vier Frontends. Die Services sind fachlich getrennt und besitzen jeweils eigene technische Verantwortung.</p>
+<pre class="code-block language-text"><code>Frontends
+  |-- Customer Storefront
+  |-- Admin Dashboard
+  |-- Warehouse WMS
+  |-- Simulation Panel
+        |
+        v
+Shop-Service als Gateway und Saga-Orchestrator
+  |-- synchron REST --&gt; Warehouse-Service
+  |-- synchron REST --&gt; Billing-Service
+  |-- Domain Events --&gt; RabbitMQ --&gt; Audit-Service
+                           |------&gt; Invoice-Service</code></pre>
+<h2 id="service-landkarte"><a class="anchor-link" href="#service-landkarte" aria-label="Abschnitt verlinken">#</a>Service-Landkarte</h2>
+<div class="table-wrap"><table><thead><tr><th>Service</th><th>Fachliche Verantwortung</th><th>Persistenz</th><th>Externe Sichtbarkeit</th></tr></thead><tbody><tr><td>Shop-Service</td><td>Gateway, Auth, Rollen, Produktkatalog, Warenkorb, Bestellung, Saga-Orchestrierung</td><td>PostgreSQL, Redis</td><td>Öffentlich für Frontends</td></tr><tr><td>Warehouse-Service</td><td>Bestand, Reservierung, Ausbuchung, Wareneingang, Fehlerprovokation</td><td>PostgreSQL</td><td>Intern, über Shop erreichbar</td></tr><tr><td>Billing-Service</td><td>Payment-Fassade, Charges, Refunds, Webhooks, Zahlungsstatus</td><td>PostgreSQL</td><td>Intern, Webhook-Endpunkt kontrolliert erreichbar</td></tr><tr><td>Invoice-Service</td><td>PDF-Rechnungserstellung nach Zahlungserfolg</td><td>Dateisystem oder Volume</td><td>Nicht öffentlich</td></tr><tr><td>Audit-Service</td><td>Append-only Snapshots, Audit-Historie, Stream für Dashboard</td><td>PostgreSQL</td><td>Lesbar über Admin-Kontext</td></tr></tbody></table></div>
+<h2 id="kommunikationsregeln"><a class="anchor-link" href="#kommunikationsregeln" aria-label="Abschnitt verlinken">#</a>Kommunikationsregeln</h2>
+<p>Die Kommunikation folgt festen Regeln, damit Kopplung sichtbar und kontrollierbar bleibt:</p>
+<ul><li>Frontends sprechen ausschließlich den Shop-Service an, außer wenn ein internes Admin- oder Monitoring-Proxy explizit über den Shop-Service bereitgestellt wird.</li><li>Der Shop-Service ruft Warehouse und Billing synchron auf, weil der Benutzer während der Bestellung ein direktes Ergebnis benötigt.</li><li>Billing publiziert nach erfolgreicher Zahlung ein <code>PaymentSucceeded</code>-Event an RabbitMQ.</li><li>Invoice verarbeitet Rechnungen asynchron, damit Rechnungsfehler nicht automatisch die Zahlung rückgängig machen.</li><li>Alle Services publizieren Domain-Events oder Audit-Snapshots an den Audit-Service.</li><li>Kein Service liest oder schreibt in die Datenbank eines anderen Services.</li></ul>
+<h2 id="synchrone-kommunikation"><a class="anchor-link" href="#synchrone-kommunikation" aria-label="Abschnitt verlinken">#</a>Synchrone Kommunikation</h2>
+<p>Synchrone REST-Kommunikation wird dort eingesetzt, wo der aufrufende Prozess das Ergebnis unmittelbar für die nächste Entscheidung benötigt.</p>
+<div class="table-wrap"><table><thead><tr><th>Aufrufer</th><th>Ziel</th><th>Zweck</th><th>Erwartung</th></tr></thead><tbody><tr><td>Shop-Service</td><td>Warehouse-Service</td><td>Bestand reservieren</td><td>Sofortige Zusage oder Ablehnung.</td></tr><tr><td>Shop-Service</td><td>Billing-Service</td><td>Zahlung starten</td><td>Sofortiger Erfolg, Fehler oder Pending-Status.</td></tr><tr><td>Shop-Service</td><td>Warehouse-Service</td><td>Reservierung stornieren</td><td>Kompensation nach Zahlungsfehler.</td></tr><tr><td>Shop-Service</td><td>Warehouse-Service</td><td>Bestand final ausbuchen</td><td>Abschluss nach Zahlungserfolg.</td></tr><tr><td>Shop-Service</td><td>Billing-Service</td><td>Refund auslösen</td><td>Kompensation nach Booking-Fehler.</td></tr></tbody></table></div>
+<h2 id="asynchrone-kommunikation"><a class="anchor-link" href="#asynchrone-kommunikation" aria-label="Abschnitt verlinken">#</a>Asynchrone Kommunikation</h2>
+<p>Asynchrone Events werden für entkoppelte Folgeprozesse verwendet.</p>
+<div class="table-wrap"><table><thead><tr><th>Event</th><th>Publisher</th><th>Consumer</th><th>Zweck</th></tr></thead><tbody><tr><td><code>PaymentSucceeded</code></td><td>Billing-Service</td><td>Invoice-Service, Audit-Service</td><td>Rechnungserstellung und Audit.</td></tr><tr><td><code>PaymentFailed</code></td><td>Billing-Service</td><td>Audit-Service</td><td>Zahlungsfehler dokumentieren.</td></tr><tr><td><code>OrderStatusChanged</code></td><td>Shop-Service</td><td>Audit-Service</td><td>Bestellstatus nachvollziehbar machen.</td></tr><tr><td><code>ReservationCreated</code></td><td>Warehouse-Service</td><td>Audit-Service</td><td>Bestandssperre dokumentieren.</td></tr><tr><td><code>ReservationCancelled</code></td><td>Warehouse-Service</td><td>Audit-Service</td><td>Kompensation dokumentieren.</td></tr><tr><td><code>StockBooked</code></td><td>Warehouse-Service</td><td>Audit-Service</td><td>Finalen Lagerabgang dokumentieren.</td></tr><tr><td><code>CircuitBreakerStateChanged</code></td><td>Invoice-Service</td><td>Audit-Service</td><td>Resilienzverhalten sichtbar machen.</td></tr></tbody></table></div>
+<h2 id="header-konventionen"><a class="anchor-link" href="#header-konventionen" aria-label="Abschnitt verlinken">#</a>Header-Konventionen</h2>
+<p>Jeder Service muss technische Kontextinformationen weiterreichen:</p>
+<div class="table-wrap"><table><thead><tr><th>Header</th><th>Pflicht</th><th>Bedeutung</th></tr></thead><tbody><tr><td><code>X-Correlation-Id</code></td><td>Ja</td><td>Verbindet Logs, Audit-Einträge und Service-Aufrufe.</td></tr><tr><td><code>X-Idempotency-Key</code></td><td>Für <code>POST /v1/orders</code></td><td>Verhindert doppelte Bestellausführung.</td></tr><tr><td><code>Authorization</code></td><td>Für geschützte Endpunkte</td><td>JWT mit Rolle und User-ID.</td></tr><tr><td><code>Content-Type</code></td><td>Ja</td><td><code>application/json</code> für APIs, <code>application/problem+json</code> für Fehler.</td></tr></tbody></table></div>
+<h2 id="fehlerformat-nach-rfc-7807"><a class="anchor-link" href="#fehlerformat-nach-rfc-7807" aria-label="Abschnitt verlinken">#</a>Fehlerformat nach RFC 7807</h2>
+<p>Fehlerantworten folgen einem einheitlichen Schema:</p>
+<pre class="code-block language-json"><code>{
+  &quot;type&quot;: &quot;https://example.local/problems/out-of-stock&quot;,
+  &quot;title&quot;: &quot;Insufficient stock&quot;,
+  &quot;status&quot;: 409,
+  &quot;detail&quot;: &quot;Product is not available in the requested quantity.&quot;,
+  &quot;instance&quot;: &quot;/v1/orders/9f4c...&quot;,
+  &quot;correlationId&quot;: &quot;9f4c...&quot;,
+  &quot;code&quot;: &quot;OUT_OF_STOCK&quot;
+}</code></pre>
+<h2 id="datenhoheit"><a class="anchor-link" href="#datenhoheit" aria-label="Abschnitt verlinken">#</a>Datenhoheit</h2>
+<p>Jeder Service ist Eigentümer seiner Daten:</p>
+<ul><li>Shop-Service besitzt Produkte, Warenkörbe, Bestellungen, Nutzer und Rollen aus Sicht des Shop-Kerns.</li><li>Warehouse-Service besitzt physische Bestände, Reservierungen und Buchungen.</li><li>Billing-Service besitzt Zahlungsversuche, Anbieterreferenzen, Refunds und Webhook-Zustände.</li><li>Invoice-Service besitzt Rechnungsdateien und Generierungsstatus.</li><li>Audit-Service besitzt ausschließlich unveränderliche Snapshots.</li></ul>
+<h2 id="konsistenzmodell"><a class="anchor-link" href="#konsistenzmodell" aria-label="Abschnitt verlinken">#</a>Konsistenzmodell</h2>
+<p>Das System arbeitet bewusst mit eventual consistency zwischen Services. Lokale Transaktionen sind pro Service möglich, aber es gibt keine globale Datenbanktransaktion. Die Konsistenz entsteht durch:</p>
+<ul><li>Klar definierte Saga-Schritte.</li><li>Kompensationsendpunkte.</li><li>Statusmodelle mit Endzuständen.</li><li>Idempotente Wiederholung kritischer Befehle.</li><li>Auditierbare Ereigniskette.</li><li>Kontrollierte Retry- und Circuit-Breaker-Mechanismen.</li></ul>
+<h2 id="sicherheitsgrenzen"><a class="anchor-link" href="#sicherheitsgrenzen" aria-label="Abschnitt verlinken">#</a>Sicherheitsgrenzen</h2>
+<p>Der Shop-Service validiert externe Anfragen, Rollen und Tokens. Interne Service-Kommunikation sollte ebenfalls abgesichert werden, mindestens durch Netzwerkisolation in Docker Compose und optional durch interne Shared Secrets oder Service Tokens.</p>
+<p>Empfohlene Mindestregeln:</p>
+<ul><li>Nur der Shop-Service veröffentlicht externe Ports für Business-APIs.</li><li>RabbitMQ Management UI und Datenbanken sind nur lokal oder intern erreichbar.</li><li>Simulation-Endpunkte sind nur für <code>ADMIN</code> freigegeben.</li><li>Warehouse-Bestandsänderungen sind nur für <code>LOGISTICS</code> oder <code>ADMIN</code> erlaubt.</li></ul>
+<h2 id="technologiestack"><a class="anchor-link" href="#technologiestack" aria-label="Abschnitt verlinken">#</a>Technologiestack</h2>
+<div class="table-wrap"><table><thead><tr><th>Bereich</th><th>Technologie</th></tr></thead><tbody><tr><td>Runtime</td><td>Node.js</td></tr><tr><td>Sprache</td><td>TypeScript</td></tr><tr><td>Backend Framework</td><td>NestJS</td></tr><tr><td>Datenbank</td><td>PostgreSQL</td></tr><tr><td>Cache</td><td>Redis</td></tr><tr><td>Message Broker</td><td>RabbitMQ</td></tr><tr><td>Frontend</td><td>React</td></tr><tr><td>Logging</td><td>JSON-Logs, Loki</td></tr><tr><td>Dashboard</td><td>Grafana</td></tr><tr><td>Deployment</td><td>Docker Compose</td></tr></tbody></table></div>
+        </article>
+      </div>
+
+      <nav class="doc-pagination" aria-label="Kapitel wechseln">
+        <a class="button ghost" href="../grundlagen/01a_anforderungsdokument.html">Vorheriges Kapitel</a>
+        <a class="button" href="../../index.html#kapitel">Alle Kapitel</a>
+        <a class="button primary" href="../services/03_service_shop.html">Nächstes Kapitel</a>
+      </nav>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Infrastruktur, Deployment und Repository - Distributed E-Commerce Core</title>
+    <link rel="stylesheet" href="../../assets/styles.css" />
+  </head>
+  <body class="doc-page">
+    <a class="skip-link" href="#inhalt">Zum Inhalt springen</a>
+
+    <aside class="sidebar doc-sidebar" aria-label="Konzeptnavigation">
+      <a class="brand brand-link" href="../../index.html">
+        <span class="brand-mark">DEC</span>
+        <span>
+          <strong>Distributed E-Commerce Core</strong>
+          <small>HTML-Konzept</small>
+        </span>
+      </a>
+      <nav class="chapter-nav" aria-label="Kapitel">
+        <div class="chapter-nav-group"><p>Grundlagen</p><a href="../grundlagen/00_quickstart_und_leseweg.html"><span>00</span>Quickstart und Leseweg</a><a href="../grundlagen/01_anforderungen_ziele_scope.html"><span>01</span>Anforderungen, Ziele und Scope</a><a href="../grundlagen/01a_anforderungsdokument.html"><span>REQ</span>Anforderungsdokument</a></div><div class="chapter-nav-group"><p>Architektur</p><a href="../architektur/02_systemarchitektur_kommunikation.html"><span>02</span>Systemarchitektur und Kommunikation</a><a href="../architektur/07_saga_transaktionen_konsistenz.html"><span>07</span>Saga, Transaktionen und Konsistenz</a></div><div class="chapter-nav-group"><p>Services</p><a href="../services/03_service_shop.html"><span>03</span>Shop-Service</a><a href="../services/04_service_warehouse.html"><span>04</span>Warehouse-Service</a><a href="../services/05_service_billing_invoice.html"><span>05</span>Billing und Invoice</a><a href="../services/06_audit_service.html"><span>06</span>Audit-Service</a></div><div class="chapter-nav-group"><p>Qualität</p><a href="../qualitaet/08_idempotenz_resilienz_security.html"><span>08</span>Idempotenz, Resilienz und Security</a><a href="../qualitaet/10_observability_logging_tracing.html"><span>10</span>Observability, Logging und Tracing</a><a href="../qualitaet/12_tests_abnahme_demo.html"><span>12</span>Tests, Abnahme und Demo</a></div><div class="chapter-nav-group"><p>Frontends</p><a href="../frontends/09_frontends_simulationssuite.html"><span>09</span>Frontends und Simulationssuite</a></div><div class="chapter-nav-group"><p>Betrieb</p><a href="11_infrastruktur_deployment_repo.html" aria-current="page"><span>11</span>Infrastruktur, Deployment und Repository</a></div><div class="chapter-nav-group"><p>Planung</p><a href="../planung/13_umsetzungsplan_roadmap.html"><span>13</span>Umsetzungsplan und Roadmap</a></div>
+      </nav>
+    <a class="sidebar-action" href="../../index.html">Zur Gesamtübersicht</a>
+    </aside>
+
+    <main id="inhalt" class="page-shell doc-shell">
+      <header class="doc-hero">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../../index.html">Übersicht</a>
+          <span>Betrieb</span>
+          <span>Kapitel 11</span>
+        </nav>
+        <p class="eyebrow">Kapitel 11</p>
+        <h1>Infrastruktur, Deployment und Repository</h1>
+        <p class="lead">Docker Compose, Netzwerke, Ports, Umgebungsvariablen, Migrationen, Repository-Struktur und Startablauf.</p>
+        <div class="doc-actions">
+          <a class="button ghost" href="../qualitaet/10_observability_logging_tracing.html">Vorheriges Kapitel</a>
+          <a class="button" href="../../11_infrastruktur_deployment_repo.md">Markdown-Quelle</a>
+          <a class="button primary" href="../qualitaet/12_tests_abnahme_demo.html">Nächstes Kapitel</a>
+        </div>
+      </header>
+
+      
+<section class="diagram-section" aria-labelledby="diagram-deployment-title">
+  <div class="section-heading compact-heading">
+    <p class="eyebrow">Diagramm</p>
+    <h2 id="diagram-deployment-title">Lokale Deployment-Topologie</h2>
+  </div>
+  <figure class="diagram-card deployment-diagram">
+    <svg viewBox="0 0 980 420" role="img" aria-label="Docker Compose Deployment mit Frontends, Services, Datenbanken, Redis, RabbitMQ, Loki und Grafana">
+      <defs><marker id="arrow-deploy" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="currentColor" /></marker></defs>
+      <g class="diagram-zone"><rect x="28" y="34" width="924" height="340" rx="8"/><text x="52" y="66">docker-compose Netzwerk</text></g>
+      <g class="diagram-node blue"><rect x="72" y="112" width="168" height="64" rx="8"/><text x="156" y="148">React Frontends</text></g>
+      <g class="diagram-node teal strong"><rect x="302" y="92" width="172" height="72" rx="8"/><text x="388" y="122">Shop API</text><text x="388" y="144">Public Port</text></g>
+      <g class="diagram-node amber"><rect x="302" y="222" width="172" height="58" rx="8"/><text x="388" y="256">Shop DB + Redis</text></g>
+      <g class="diagram-node amber"><rect x="536" y="92" width="152" height="58" rx="8"/><text x="612" y="126">Warehouse</text></g>
+      <g class="diagram-node amber"><rect x="536" y="172" width="152" height="58" rx="8"/><text x="612" y="206">Billing</text></g>
+      <g class="diagram-node plum"><rect x="536" y="252" width="152" height="58" rx="8"/><text x="612" y="286">Invoice</text></g>
+      <g class="diagram-node plum"><rect x="754" y="92" width="150" height="58" rx="8"/><text x="829" y="126">RabbitMQ</text></g>
+      <g class="diagram-node dark"><rect x="754" y="172" width="150" height="58" rx="8"/><text x="829" y="206">Audit DB/API</text></g>
+      <g class="diagram-node dark"><rect x="754" y="252" width="150" height="58" rx="8"/><text x="829" y="286">Loki/Grafana</text></g>
+      <path class="diagram-line" d="M240 144 H302" marker-end="url(#arrow-deploy)"/><path class="diagram-line sync" d="M474 128 H536" marker-end="url(#arrow-deploy)"/><path class="diagram-line sync" d="M474 146 C506 146 502 201 536 201" marker-end="url(#arrow-deploy)"/><path class="diagram-line" d="M388 164 V222" marker-end="url(#arrow-deploy)"/><path class="diagram-line async" d="M688 201 C724 201 720 121 754 121" marker-end="url(#arrow-deploy)"/><path class="diagram-line async" d="M688 281 C720 281 722 121 754 121" marker-end="url(#arrow-deploy)"/><path class="diagram-line async" d="M612 310 C648 352 804 352 829 310" marker-end="url(#arrow-deploy)"/>
+    </svg>
+  </figure>
+</section>
+
+
+      <div class="doc-layout">
+        <aside class="toc-card" aria-label="Inhaltsverzeichnis"><strong>Inhalt</strong><a class="toc-level-2" href="#zielbild">Zielbild</a><a class="toc-level-2" href="#container-landkarte">Container-Landkarte</a><a class="toc-level-2" href="#docker-compose-prinzipien">Docker-Compose-Prinzipien</a><a class="toc-level-2" href="#netzwerkstruktur">Netzwerkstruktur</a><a class="toc-level-2" href="#ports">Ports</a><a class="toc-level-2" href="#umgebungsvariablen">Umgebungsvariablen</a><a class="toc-level-3" href="#allgemein">Allgemein</a><a class="toc-level-3" href="#shop-service">Shop-Service</a><a class="toc-level-3" href="#warehouse-service">Warehouse-Service</a><a class="toc-level-3" href="#billing-service">Billing-Service</a><a class="toc-level-3" href="#invoice-service">Invoice-Service</a><a class="toc-level-3" href="#audit-service">Audit-Service</a><a class="toc-level-2" href="#healthchecks">Healthchecks</a><a class="toc-level-2" href="#migrationen-und-seed-daten">Migrationen und Seed-Daten</a><a class="toc-level-2" href="#repository-struktur">Repository-Struktur</a><a class="toc-level-2" href="#service-interne-struktur">Service-interne Struktur</a><a class="toc-level-2" href="#adrs">ADRs</a><a class="toc-level-2" href="#skalierung">Skalierung</a><a class="toc-level-2" href="#lokaler-startablauf">Lokaler Startablauf</a><a class="toc-level-2" href="#abnahmekriterien">Abnahmekriterien</a></aside>
+        <article class="article-content">
+          <h1 id="infrastruktur-deployment-und-repository-struktur"><a class="anchor-link" href="#infrastruktur-deployment-und-repository-struktur" aria-label="Abschnitt verlinken">#</a>Infrastruktur, Deployment und Repository-Struktur</h1>
+<h2 id="zielbild"><a class="anchor-link" href="#zielbild" aria-label="Abschnitt verlinken">#</a>Zielbild</h2>
+<p>Alle Bestandteile des Systems sollen lokal reproduzierbar über Docker Compose startbar sein. Die Infrastruktur bildet nicht nur Datenbanken und Broker ab, sondern auch Redis, Frontends und Observability. Konfiguration erfolgt ausschließlich über Umgebungsvariablen.</p>
+<h2 id="container-landkarte"><a class="anchor-link" href="#container-landkarte" aria-label="Abschnitt verlinken">#</a>Container-Landkarte</h2>
+<div class="table-wrap"><table><thead><tr><th>Container</th><th>Zweck</th><th>Abhängigkeiten</th></tr></thead><tbody><tr><td><code>shop-service</code></td><td>Gateway, IAM, Katalog, Warenkorb, Saga</td><td><code>shop-db</code>, <code>redis</code>, <code>rabbitmq</code>, Warehouse, Billing</td></tr><tr><td><code>warehouse-service</code></td><td>Bestand, Reservierung, Booking</td><td><code>warehouse-db</code>, <code>rabbitmq</code></td></tr><tr><td><code>billing-service</code></td><td>Payment-Fassade, Webhooks, Refunds</td><td><code>billing-db</code>, <code>rabbitmq</code></td></tr><tr><td><code>invoice-service</code></td><td>PDF-Rechnungserstellung</td><td><code>rabbitmq</code>, Invoice-Volume</td></tr><tr><td><code>audit-service</code></td><td>Append-only Snapshots, Stream</td><td><code>audit-db</code>, <code>rabbitmq</code></td></tr><tr><td><code>shop-db</code></td><td>Shop-PostgreSQL</td><td>Volume</td></tr><tr><td><code>warehouse-db</code></td><td>Warehouse-PostgreSQL</td><td>Volume</td></tr><tr><td><code>billing-db</code></td><td>Billing-PostgreSQL</td><td>Volume</td></tr><tr><td><code>audit-db</code></td><td>Audit-PostgreSQL</td><td>Volume</td></tr><tr><td><code>redis</code></td><td>Idempotenz und Sessions</td><td>Volume optional</td></tr><tr><td><code>rabbitmq</code></td><td>Message Broker</td><td>Management UI optional</td></tr><tr><td><code>loki</code></td><td>Logspeicher</td><td>Volume</td></tr><tr><td><code>grafana</code></td><td>Dashboards</td><td>Loki</td></tr><tr><td><code>storefront-ui</code></td><td>Customer Frontend</td><td>Shop-Service</td></tr><tr><td><code>admin-dashboard</code></td><td>Admin Frontend</td><td>Shop-Service</td></tr><tr><td><code>warehouse-wms</code></td><td>Warehouse Frontend</td><td>Shop-Service</td></tr><tr><td><code>simulation-panel</code></td><td>Demo Control Panel</td><td>Shop-Service</td></tr></tbody></table></div>
+<h2 id="docker-compose-prinzipien"><a class="anchor-link" href="#docker-compose-prinzipien" aria-label="Abschnitt verlinken">#</a>Docker-Compose-Prinzipien</h2>
+<ul><li>Jeder Service erhält einen eindeutigen Container-Namen.</li><li>Datenbanken laufen in eigenen Containern, nicht als geteilte Instanz mit gemeinsamen Schemas.</li><li>Services kommunizieren über interne Docker-DNS-Namen.</li><li>Nur notwendige Ports werden auf den Host veröffentlicht.</li><li>Healthchecks verhindern, dass abhängige Services zu früh starten.</li><li>Volumes sichern Datenbank- und Rechnungsdaten.</li><li><code>.env</code> steuert Ports, Secrets, Provider-Auswahl und Simulation.</li></ul>
+<h2 id="netzwerkstruktur"><a class="anchor-link" href="#netzwerkstruktur" aria-label="Abschnitt verlinken">#</a>Netzwerkstruktur</h2>
+<p>Empfohlen sind zwei Docker-Netzwerke:</p>
+<div class="table-wrap"><table><thead><tr><th>Netzwerk</th><th>Enthält</th><th>Zweck</th></tr></thead><tbody><tr><td><code>public-net</code></td><td>Frontends, Shop-Service</td><td>Zugriff vom Browser auf Gateway und UIs.</td></tr><tr><td><code>internal-net</code></td><td>Services, Datenbanken, Redis, RabbitMQ</td><td>Interne Service-Kommunikation.</td></tr></tbody></table></div>
+<p>Nur der Shop-Service hängt an beiden Netzwerken. Interne Services bleiben im <code>internal-net</code>.</p>
+<h2 id="ports"><a class="anchor-link" href="#ports" aria-label="Abschnitt verlinken">#</a>Ports</h2>
+<p>Beispielhafte lokale Ports:</p>
+<div class="table-wrap"><table><thead><tr><th>Komponente</th><th>Host-Port</th><th>Intern</th></tr></thead><tbody><tr><td>Shop-Service</td><td><code>3000</code></td><td><code>3000</code></td></tr><tr><td>Storefront UI</td><td><code>5173</code></td><td><code>5173</code></td></tr><tr><td>Admin Dashboard</td><td><code>5174</code></td><td><code>5173</code></td></tr><tr><td>Warehouse WMS</td><td><code>5175</code></td><td><code>5173</code></td></tr><tr><td>Simulation Panel</td><td><code>5176</code></td><td><code>5173</code></td></tr><tr><td>RabbitMQ Management</td><td><code>15672</code></td><td><code>15672</code></td></tr><tr><td>Grafana</td><td><code>3001</code></td><td><code>3000</code></td></tr><tr><td>Loki</td><td>nicht öffentlich nötig</td><td><code>3100</code></td></tr></tbody></table></div>
+<h2 id="umgebungsvariablen"><a class="anchor-link" href="#umgebungsvariablen" aria-label="Abschnitt verlinken">#</a>Umgebungsvariablen</h2>
+<h3 id="allgemein"><a class="anchor-link" href="#allgemein" aria-label="Abschnitt verlinken">#</a>Allgemein</h3>
+<pre class="code-block language-env"><code>NODE_ENV=development
+LOG_LEVEL=info
+JWT_SECRET=change-me-local
+RABBITMQ_URL=amqp://app:app@rabbitmq:5672
+REDIS_URL=redis://redis:6379</code></pre>
+<h3 id="shop-service"><a class="anchor-link" href="#shop-service" aria-label="Abschnitt verlinken">#</a>Shop-Service</h3>
+<pre class="code-block language-env"><code>SHOP_DATABASE_URL=postgres://shop:shop@shop-db:5432/shop
+WAREHOUSE_BASE_URL=http://warehouse-service:3000
+BILLING_BASE_URL=http://billing-service:3000
+AUDIT_EVENTS_EXCHANGE=audit.domain-events
+IDEMPOTENCY_TTL_SECONDS=86400</code></pre>
+<h3 id="warehouse-service"><a class="anchor-link" href="#warehouse-service" aria-label="Abschnitt verlinken">#</a>Warehouse-Service</h3>
+<pre class="code-block language-env"><code>WAREHOUSE_DATABASE_URL=postgres://warehouse:warehouse@warehouse-db:5432/warehouse
+WAREHOUSE_LOCK_TIMEOUT_MS=5000
+WAREHOUSE_DEFAULT_RESERVATION_TTL_SECONDS=900</code></pre>
+<h3 id="billing-service"><a class="anchor-link" href="#billing-service" aria-label="Abschnitt verlinken">#</a>Billing-Service</h3>
+<pre class="code-block language-env"><code>BILLING_DATABASE_URL=postgres://billing:billing@billing-db:5432/billing
+PAYMENT_PROVIDER=stripe-sim
+PAYMENT_WEBHOOK_DELAY_MS=2500
+PAYMENT_WEBHOOK_SECRET=change-me-local</code></pre>
+<h3 id="invoice-service"><a class="anchor-link" href="#invoice-service" aria-label="Abschnitt verlinken">#</a>Invoice-Service</h3>
+<pre class="code-block language-env"><code>INVOICE_OUTPUT_DIR=/data/invoices
+INVOICE_RETRY_ATTEMPTS=3
+INVOICE_CIRCUIT_BREAKER_FAILURES=3
+INVOICE_CIRCUIT_BREAKER_OPEN_MS=30000</code></pre>
+<h3 id="audit-service"><a class="anchor-link" href="#audit-service" aria-label="Abschnitt verlinken">#</a>Audit-Service</h3>
+<pre class="code-block language-env"><code>AUDIT_DATABASE_URL=postgres://audit:audit@audit-db:5432/audit
+AUDIT_STREAM_HEARTBEAT_MS=15000</code></pre>
+<h2 id="healthchecks"><a class="anchor-link" href="#healthchecks" aria-label="Abschnitt verlinken">#</a>Healthchecks</h2>
+<p>Jeder Service bietet:</p>
+<pre class="code-block language-http"><code>GET /health</code></pre>
+<p>Antwort:</p>
+<pre class="code-block language-json"><code>{
+  &quot;status&quot;: &quot;ok&quot;,
+  &quot;service&quot;: &quot;shop-service&quot;,
+  &quot;dependencies&quot;: {
+    &quot;database&quot;: &quot;ok&quot;,
+    &quot;redis&quot;: &quot;ok&quot;,
+    &quot;rabbitmq&quot;: &quot;ok&quot;
+  }
+}</code></pre>
+<p>Healthchecks sollten technische Bereitschaft prüfen, aber nicht zu teuer sein.</p>
+<h2 id="migrationen-und-seed-daten"><a class="anchor-link" href="#migrationen-und-seed-daten" aria-label="Abschnitt verlinken">#</a>Migrationen und Seed-Daten</h2>
+<p>Jeder Service verwaltet eigene Migrationen. Ein zentrales Migrationsskript darf die Services nacheinander starten, aber nicht gemeinsame Schemas erzeugen.</p>
+<p>Seed-Daten für Demo:</p>
+<ul><li>Admin-Nutzer.</li><li>Logistics-Nutzer.</li><li>Customer-Nutzer.</li><li>Drei bis fünf Produkte.</li><li>Ein Produkt mit Bestand <code>1</code> für Concurrency-Test.</li><li>Ein Produkt mit ausreichend Bestand für Happy Path.</li></ul>
+<h2 id="repository-struktur"><a class="anchor-link" href="#repository-struktur" aria-label="Abschnitt verlinken">#</a>Repository-Struktur</h2>
+<pre class="code-block language-text"><code>/
+├── docker-compose.yml
+├── .env.example
+├── docs/
+│   ├── architecture.md
+│   ├── api.md
+│   ├── demo-script.md
+│   └── decisions/
+│       ├── 001-service-boundaries.md
+│       ├── 002-saga-orchestration.md
+│       ├── 003-payment-facade.md
+│       └── 004-observability-stack.md
+├── konzept/
+├── shop-service/
+├── warehouse-service/
+├── billing-service/
+├── invoice-service/
+├── audit-service/
+└── frontends/
+    ├── storefront-ui/
+    ├── admin-dashboard/
+    ├── warehouse-wms/
+    └── simulation-panel/</code></pre>
+<h2 id="service-interne-struktur"><a class="anchor-link" href="#service-interne-struktur" aria-label="Abschnitt verlinken">#</a>Service-interne Struktur</h2>
+<p>Für NestJS-Services empfiehlt sich:</p>
+<pre class="code-block language-text"><code>src/
+├── app.module.ts
+├── main.ts
+├── config/
+├── common/
+│   ├── filters/
+│   ├── guards/
+│   ├── interceptors/
+│   └── logging/
+├── modules/
+│   └── &lt;domain&gt;/
+│       ├── controllers/
+│       ├── application/
+│       ├── domain/
+│       ├── infrastructure/
+│       └── dto/
+└── migrations/</code></pre>
+<h2 id="adrs"><a class="anchor-link" href="#adrs" aria-label="Abschnitt verlinken">#</a>ADRs</h2>
+<p>Mindestens folgende Architecture Decision Records sollten erstellt werden:</p>
+<div class="table-wrap"><table><thead><tr><th>ADR</th><th>Entscheidung</th></tr></thead><tbody><tr><td><code>001-service-boundaries</code></td><td>Warum genau diese fünf Services.</td></tr><tr><td><code>002-database-per-service</code></td><td>Warum keine gemeinsame Datenbank.</td></tr><tr><td><code>003-saga-orchestration</code></td><td>Warum Shop-Service orchestriert.</td></tr><tr><td><code>004-rabbitmq-events</code></td><td>Warum RabbitMQ für asynchrone Verarbeitung.</td></tr><tr><td><code>005-payment-facade</code></td><td>Warum Provider-Fassade statt direkter Stubs.</td></tr><tr><td><code>006-pessimistic-locking</code></td><td>Warum Warehouse <code>SELECT ... FOR UPDATE</code> nutzt.</td></tr><tr><td><code>007-observability</code></td><td>Warum Loki/Grafana und JSON-Logs.</td></tr></tbody></table></div>
+<h2 id="skalierung"><a class="anchor-link" href="#skalierung" aria-label="Abschnitt verlinken">#</a>Skalierung</h2>
+<p>Im Docker-Compose-Kontext kann der Warehouse-Service horizontal skaliert werden, um zu zeigen, dass Concurrency nicht im Prozessspeicher, sondern in der Datenbank abgesichert wird.</p>
+<p>Beispielziel:</p>
+<pre class="code-block language-text"><code>docker compose up --scale warehouse-service=2</code></pre>
+<p>Wichtig: Der Concurrency-Test muss auch bei mehreren Warehouse-Instanzen korrekt bleiben, weil PostgreSQL die Sperre zentral hält.</p>
+<h2 id="lokaler-startablauf"><a class="anchor-link" href="#lokaler-startablauf" aria-label="Abschnitt verlinken">#</a>Lokaler Startablauf</h2>
+<p>Empfohlene Kommandoreihenfolge in der späteren Implementierung:</p>
+<pre class="code-block language-text"><code>cp .env.example .env
+docker compose build
+docker compose up -d postgres/rabbitmq/redis
+docker compose run --rm shop-service npm run migration:run
+docker compose run --rm warehouse-service npm run migration:run
+docker compose run --rm billing-service npm run migration:run
+docker compose run --rm audit-service npm run migration:run
+docker compose run --rm shop-service npm run seed
+docker compose up</code></pre>
+<p>Die tatsächlichen Kommandos hängen vom finalen Package-Setup ab, sollten aber in <code>docs/demo-script.md</code> eindeutig dokumentiert werden.</p>
+<h2 id="abnahmekriterien"><a class="anchor-link" href="#abnahmekriterien" aria-label="Abschnitt verlinken">#</a>Abnahmekriterien</h2>
+<ul><li><code>docker compose up</code> startet alle Pflichtservices.</li><li>Jeder Service hat eigene Konfiguration und eigene Datenhaltung.</li><li>RabbitMQ, Redis und Datenbanken sind intern erreichbar.</li><li>Frontends sind lokal auf dokumentierten Ports erreichbar.</li><li>Grafana zeigt Logs aus mehreren Services.</li><li><code>.env.example</code> enthält alle benötigten Variablen ohne echte Secrets.</li></ul>
+        </article>
+      </div>
+
+      <nav class="doc-pagination" aria-label="Kapitel wechseln">
+        <a class="button ghost" href="../qualitaet/10_observability_logging_tracing.html">Vorheriges Kapitel</a>
+        <a class="button" href="../../index.html#kapitel">Alle Kapitel</a>
+        <a class="button primary" href="../qualitaet/12_tests_abnahme_demo.html">Nächstes Kapitel</a>
+      </nav>
+    </main>
+  </body>
+</html>

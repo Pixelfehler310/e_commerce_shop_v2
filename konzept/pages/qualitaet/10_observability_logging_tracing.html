@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Observability, Logging und Tracing - Distributed E-Commerce Core</title>
+    <link rel="stylesheet" href="../../assets/styles.css" />
+  </head>
+  <body class="doc-page">
+    <a class="skip-link" href="#inhalt">Zum Inhalt springen</a>
+
+    <aside class="sidebar doc-sidebar" aria-label="Konzeptnavigation">
+      <a class="brand brand-link" href="../../index.html">
+        <span class="brand-mark">DEC</span>
+        <span>
+          <strong>Distributed E-Commerce Core</strong>
+          <small>HTML-Konzept</small>
+        </span>
+      </a>
+      <nav class="chapter-nav" aria-label="Kapitel">
+        <div class="chapter-nav-group"><p>Grundlagen</p><a href="../grundlagen/00_quickstart_und_leseweg.html"><span>00</span>Quickstart und Leseweg</a><a href="../grundlagen/01_anforderungen_ziele_scope.html"><span>01</span>Anforderungen, Ziele und Scope</a><a href="../grundlagen/01a_anforderungsdokument.html"><span>REQ</span>Anforderungsdokument</a></div><div class="chapter-nav-group"><p>Architektur</p><a href="../architektur/02_systemarchitektur_kommunikation.html"><span>02</span>Systemarchitektur und Kommunikation</a><a href="../architektur/07_saga_transaktionen_konsistenz.html"><span>07</span>Saga, Transaktionen und Konsistenz</a></div><div class="chapter-nav-group"><p>Services</p><a href="../services/03_service_shop.html"><span>03</span>Shop-Service</a><a href="../services/04_service_warehouse.html"><span>04</span>Warehouse-Service</a><a href="../services/05_service_billing_invoice.html"><span>05</span>Billing und Invoice</a><a href="../services/06_audit_service.html"><span>06</span>Audit-Service</a></div><div class="chapter-nav-group"><p>Qualität</p><a href="08_idempotenz_resilienz_security.html"><span>08</span>Idempotenz, Resilienz und Security</a><a href="10_observability_logging_tracing.html" aria-current="page"><span>10</span>Observability, Logging und Tracing</a><a href="12_tests_abnahme_demo.html"><span>12</span>Tests, Abnahme und Demo</a></div><div class="chapter-nav-group"><p>Frontends</p><a href="../frontends/09_frontends_simulationssuite.html"><span>09</span>Frontends und Simulationssuite</a></div><div class="chapter-nav-group"><p>Betrieb</p><a href="../betrieb/11_infrastruktur_deployment_repo.html"><span>11</span>Infrastruktur, Deployment und Repository</a></div><div class="chapter-nav-group"><p>Planung</p><a href="../planung/13_umsetzungsplan_roadmap.html"><span>13</span>Umsetzungsplan und Roadmap</a></div>
+      </nav>
+    <a class="sidebar-action" href="../../index.html">Zur Gesamtübersicht</a>
+    </aside>
+
+    <main id="inhalt" class="page-shell doc-shell">
+      <header class="doc-hero">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../../index.html">Übersicht</a>
+          <span>Qualität</span>
+          <span>Kapitel 10</span>
+        </nav>
+        <p class="eyebrow">Kapitel 10</p>
+        <h1>Observability, Logging und Tracing</h1>
+        <p class="lead">JSON-Logs, correlationId-Fluss, Loki, Grafana-Dashboards, Metriken und Audit-Zusammenspiel.</p>
+        <div class="doc-actions">
+          <a class="button ghost" href="../frontends/09_frontends_simulationssuite.html">Vorheriges Kapitel</a>
+          <a class="button" href="../../10_observability_logging_tracing.md">Markdown-Quelle</a>
+          <a class="button primary" href="../betrieb/11_infrastruktur_deployment_repo.html">Nächstes Kapitel</a>
+        </div>
+      </header>
+
+      
+
+      <div class="doc-layout">
+        <aside class="toc-card" aria-label="Inhaltsverzeichnis"><strong>Inhalt</strong><a class="toc-level-2" href="#ziel">Ziel</a><a class="toc-level-2" href="#grundelemente">Grundelemente</a><a class="toc-level-2" href="#json-logformat">JSON-Logformat</a><a class="toc-level-2" href="#pflichtfelder">Pflichtfelder</a><a class="toc-level-2" href="#correlation-id-fluss">Correlation-ID-Fluss</a><a class="toc-level-2" href="#log-level-konvention">Log-Level-Konvention</a><a class="toc-level-2" href="#was-nicht-geloggt-wird">Was nicht geloggt wird</a><a class="toc-level-2" href="#loki-anbindung">Loki-Anbindung</a><a class="toc-level-2" href="#grafana-dashboard">Grafana-Dashboard</a><a class="toc-level-3" href="#bestellvolumen">Bestellvolumen</a><a class="toc-level-3" href="#fehlerrate-nach-service">Fehlerrate nach Service</a><a class="toc-level-3" href="#payment-ergebnisse">Payment-Ergebnisse</a><a class="toc-level-3" href="#saga-timeline-suche">Saga-Timeline-Suche</a><a class="toc-level-2" href="#beispiel-logql-abfragen">Beispiel-LogQL-Abfragen</a><a class="toc-level-2" href="#metriken">Metriken</a><a class="toc-level-2" href="#tracing-optional">Tracing optional</a><a class="toc-level-2" href="#zusammenspiel-mit-audit">Zusammenspiel mit Audit</a><a class="toc-level-2" href="#demo-nutzung">Demo-Nutzung</a><a class="toc-level-2" href="#abnahmekriterien">Abnahmekriterien</a></aside>
+        <article class="article-content">
+          <h1 id="observability-logging-und-tracing"><a class="anchor-link" href="#observability-logging-und-tracing" aria-label="Abschnitt verlinken">#</a>Observability, Logging und Tracing</h1>
+<h2 id="ziel"><a class="anchor-link" href="#ziel" aria-label="Abschnitt verlinken">#</a>Ziel</h2>
+<p>Observability macht das Verhalten des verteilten Systems nachvollziehbar. Für dieses Projekt ist sie besonders wichtig, weil Fehlerpfade und Nebenläufigkeit live demonstriert werden sollen. Logs, Audit-Snapshots und Dashboards müssen dieselbe <code>correlationId</code> verwenden, damit ein Bestellvorgang vollständig rekonstruiert werden kann.</p>
+<h2 id="grundelemente"><a class="anchor-link" href="#grundelemente" aria-label="Abschnitt verlinken">#</a>Grundelemente</h2>
+<div class="table-wrap"><table><thead><tr><th>Element</th><th>Zweck</th></tr></thead><tbody><tr><td>Strukturierte JSON-Logs</td><td>Maschinenlesbare Diagnose pro Service.</td></tr><tr><td><code>correlationId</code></td><td>Verbindung aller Logs, Events und Requests einer Bestellung.</td></tr><tr><td>Audit-Snapshots</td><td>Fachlich-technische Zustandsübergänge.</td></tr><tr><td>Loki</td><td>Zentraler Log-Speicher.</td></tr><tr><td>Grafana</td><td>Dashboards für Bestellungen, Fehler und Payment-Ergebnisse.</td></tr><tr><td>Optional OpenTelemetry</td><td>Verteilte Traces und Spans.</td></tr></tbody></table></div>
+<h2 id="json-logformat"><a class="anchor-link" href="#json-logformat" aria-label="Abschnitt verlinken">#</a>JSON-Logformat</h2>
+<p>Jeder Logeintrag enthält mindestens:</p>
+<pre class="code-block language-json"><code>{
+  &quot;timestamp&quot;: &quot;2026-05-29T12:00:00.000Z&quot;,
+  &quot;level&quot;: &quot;info&quot;,
+  &quot;service&quot;: &quot;shop-service&quot;,
+  &quot;message&quot;: &quot;Order status changed&quot;,
+  &quot;correlationId&quot;: &quot;ord-2026-0001&quot;,
+  &quot;context&quot;: {
+    &quot;from&quot;: &quot;RESERVED&quot;,
+    &quot;to&quot;: &quot;BOOKING_PENDING&quot;,
+    &quot;orderId&quot;: &quot;ord-internal-123&quot;
+  }
+}</code></pre>
+<h2 id="pflichtfelder"><a class="anchor-link" href="#pflichtfelder" aria-label="Abschnitt verlinken">#</a>Pflichtfelder</h2>
+<div class="table-wrap"><table><thead><tr><th>Feld</th><th>Pflicht</th><th>Beschreibung</th></tr></thead><tbody><tr><td><code>timestamp</code></td><td>Ja</td><td>ISO-Zeitstempel.</td></tr><tr><td><code>level</code></td><td>Ja</td><td><code>debug</code>, <code>info</code>, <code>warn</code>, <code>error</code>.</td></tr><tr><td><code>service</code></td><td>Ja</td><td>Service-Name.</td></tr><tr><td><code>message</code></td><td>Ja</td><td>Kurze menschenlesbare Aussage.</td></tr><tr><td><code>correlationId</code></td><td>Für Prozesslogs ja</td><td>Verbindet Bestellfluss.</td></tr><tr><td><code>requestId</code></td><td>Optional</td><td>Einzelner HTTP-Request.</td></tr><tr><td><code>context</code></td><td>Ja</td><td>Strukturierte Zusatzdaten.</td></tr><tr><td><code>error</code></td><td>Bei Fehlern</td><td>Code, Message, Stack nur intern.</td></tr></tbody></table></div>
+<h2 id="correlation-id-fluss"><a class="anchor-link" href="#correlation-id-fluss" aria-label="Abschnitt verlinken">#</a>Correlation-ID-Fluss</h2>
+<ol><li>Externer Request bringt <code>X-Correlation-Id</code> mit oder Shop-Service erzeugt eine neue.</li><li>Shop-Service schreibt sie in Request Context und Logs.</li><li>Shop-Service sendet sie in HTTP-Headern an Warehouse und Billing.</li><li>Services übernehmen sie in Logs, Audit-Events und Folgeaufrufen.</li><li>RabbitMQ-Messages enthalten sie als Property und im Payload.</li><li>Invoice und Audit übernehmen sie aus Eventdaten.</li></ol>
+<h2 id="log-level-konvention"><a class="anchor-link" href="#log-level-konvention" aria-label="Abschnitt verlinken">#</a>Log-Level-Konvention</h2>
+<div class="table-wrap"><table><thead><tr><th>Level</th><th>Verwendung</th></tr></thead><tbody><tr><td><code>debug</code></td><td>Detaildaten für lokale Entwicklung, z. B. Provider-Stub-Entscheidung.</td></tr><tr><td><code>info</code></td><td>Normale Zustandswechsel, erfolgreiche Service-Aufrufe.</td></tr><tr><td><code>warn</code></td><td>Fachlich erwartbare Probleme, z. B. Payment abgelehnt oder Out of Stock.</td></tr><tr><td><code>error</code></td><td>Technische Fehler, unerwartete Exceptions, endgültige Retry-Fehler.</td></tr></tbody></table></div>
+<h2 id="was-nicht-geloggt-wird"><a class="anchor-link" href="#was-nicht-geloggt-wird" aria-label="Abschnitt verlinken">#</a>Was nicht geloggt wird</h2>
+<p>Nicht in Logs gehören:</p>
+<ul><li>Passwörter.</li><li>JWTs.</li><li>Authorization Header.</li><li>Vollständige Zahlungsdaten.</li><li>Datenbankpasswörter.</li><li>Provider-Secrets.</li></ul>
+<h2 id="loki-anbindung"><a class="anchor-link" href="#loki-anbindung" aria-label="Abschnitt verlinken">#</a>Loki-Anbindung</h2>
+<p>Für Docker Compose bietet sich Promtail oder ein Loki-kompatibler Logging Driver an. Jeder Container schreibt JSON auf stdout. Loki sammelt die Logs und Grafana visualisiert sie.</p>
+<p>Empfohlene Labels:</p>
+<ul><li><code>service</code>.</li><li><code>environment</code>.</li><li><code>level</code>.</li><li><code>container</code>.</li></ul>
+<p><code>correlationId</code> sollte im Loginhalt filterbar sein, aber nicht unbedingt als Label verwendet werden, weil hohe Kardinalität in Loki problematisch ist.</p>
+<h2 id="grafana-dashboard"><a class="anchor-link" href="#grafana-dashboard" aria-label="Abschnitt verlinken">#</a>Grafana-Dashboard</h2>
+<p>Das zentrale Dashboard sollte mindestens vier Bereiche besitzen.</p>
+<h3 id="bestellvolumen"><a class="anchor-link" href="#bestellvolumen" aria-label="Abschnitt verlinken">#</a>Bestellvolumen</h3>
+<ul><li>Bestellungen pro Minute oder Intervall.</li><li>Erfolgreiche vs. fehlgeschlagene Bestellungen.</li><li>Anzahl offener <code>PAYMENT_PENDING</code>-Bestellungen.</li></ul>
+<h3 id="fehlerrate-nach-service"><a class="anchor-link" href="#fehlerrate-nach-service" aria-label="Abschnitt verlinken">#</a>Fehlerrate nach Service</h3>
+<ul><li>Fehlerlogs nach <code>service</code> gruppiert.</li><li>Warnungen getrennt von echten technischen Fehlern.</li><li>Top-Fehlercodes aus Problem Details.</li></ul>
+<h3 id="payment-ergebnisse"><a class="anchor-link" href="#payment-ergebnisse" aria-label="Abschnitt verlinken">#</a>Payment-Ergebnisse</h3>
+<ul><li><code>SUCCEEDED</code>, <code>FAILED</code>, <code>PENDING</code>, <code>REFUNDED</code>.</li><li>Provider-Aufteilung.</li><li>Webhook-Latenz, wenn gemessen.</li></ul>
+<h3 id="saga-timeline-suche"><a class="anchor-link" href="#saga-timeline-suche" aria-label="Abschnitt verlinken">#</a>Saga-Timeline-Suche</h3>
+<ul><li>Textfeld für <code>correlationId</code>.</li><li>Logliste über alle Services.</li><li>Link zur Admin-Audit-Timeline.</li></ul>
+<h2 id="beispiel-logql-abfragen"><a class="anchor-link" href="#beispiel-logql-abfragen" aria-label="Abschnitt verlinken">#</a>Beispiel-LogQL-Abfragen</h2>
+<p>Alle Logs zu einer Bestellung:</p>
+<pre class="code-block language-logql"><code>{environment=&quot;local&quot;} |= &quot;ord-2026-0001&quot;</code></pre>
+<p>Fehler pro Service:</p>
+<pre class="code-block language-logql"><code>sum by (service) (count_over_time({environment=&quot;local&quot;} | json | level=&quot;error&quot; [5m]))</code></pre>
+<p>Payment-Ablehnungen:</p>
+<pre class="code-block language-logql"><code>{service=&quot;billing-service&quot;} | json | context_status=&quot;FAILED&quot;</code></pre>
+<h2 id="metriken"><a class="anchor-link" href="#metriken" aria-label="Abschnitt verlinken">#</a>Metriken</h2>
+<p>Auch wenn das PDF vor allem Logging nennt, sind einfache Metriken hilfreich.</p>
+<p>Empfohlene Metriken:</p>
+<div class="table-wrap"><table><thead><tr><th>Metrik</th><th>Typ</th><th>Bedeutung</th></tr></thead><tbody><tr><td><code>orders_created_total</code></td><td>Counter</td><td>Anzahl gestarteter Bestellungen.</td></tr><tr><td><code>orders_completed_total</code></td><td>Counter</td><td>Erfolgreiche Bestellungen.</td></tr><tr><td><code>orders_failed_total</code></td><td>Counter</td><td>Fehlgeschlagene Bestellungen nach Grund.</td></tr><tr><td><code>payment_attempts_total</code></td><td>Counter</td><td>Zahlungsversuche nach Provider und Ergebnis.</td></tr><tr><td><code>warehouse_reservations_total</code></td><td>Counter</td><td>Reservierungen nach Ergebnis.</td></tr><tr><td><code>invoice_generation_failures_total</code></td><td>Counter</td><td>Fehler der Rechnungserstellung.</td></tr><tr><td><code>saga_duration_seconds</code></td><td>Histogram</td><td>Dauer des Bestellprozesses.</td></tr></tbody></table></div>
+<h2 id="tracing-optional"><a class="anchor-link" href="#tracing-optional" aria-label="Abschnitt verlinken">#</a>Tracing optional</h2>
+<p>OpenTelemetry kann den Zusammenhang der synchronen HTTP-Aufrufe noch klarer zeigen.</p>
+<p>Span-Idee:</p>
+<pre class="code-block language-text"><code>POST /v1/orders
+  -&gt; warehouse.reserve
+  -&gt; billing.charge
+  -&gt; warehouse.book
+  -&gt; audit.publish</code></pre>
+<p>Für das Projekt ist Tracing optional, aber ein kleiner Trace-Auszug in der Demo wäre ein starker Bonus.</p>
+<h2 id="zusammenspiel-mit-audit"><a class="anchor-link" href="#zusammenspiel-mit-audit" aria-label="Abschnitt verlinken">#</a>Zusammenspiel mit Audit</h2>
+<p>Logs und Audit haben unterschiedliche Aufgaben:</p>
+<div class="table-wrap"><table><thead><tr><th>Audit</th><th>Logs</th></tr></thead><tbody><tr><td>Fachlich relevante Zustandsübergänge.</td><td>Technische Diagnose.</td></tr><tr><td>Append-only und langfristig nachvollziehbar.</td><td>Detailliert, filterbar, volatil.</td></tr><tr><td>Wird im Admin Dashboard gezeigt.</td><td>Wird in Grafana analysiert.</td></tr><tr><td>Eher grob, dafür stabil.</td><td>Eher detailliert, dafür technisch.</td></tr></tbody></table></div>
+<h2 id="demo-nutzung"><a class="anchor-link" href="#demo-nutzung" aria-label="Abschnitt verlinken">#</a>Demo-Nutzung</h2>
+<p>Für jede Live-Demo sollte direkt nach Start die <code>correlationId</code> sichtbar sein. Diese ID wird dann in drei Ansichten verwendet:</p>
+<ul><li>Admin Dashboard für Audit-Timeline.</li><li>Grafana für Logs.</li><li>Frontend-Statusseite für Nutzersicht.</li></ul>
+<h2 id="abnahmekriterien"><a class="anchor-link" href="#abnahmekriterien" aria-label="Abschnitt verlinken">#</a>Abnahmekriterien</h2>
+<ul><li>Jeder Service schreibt JSON-Logs.</li><li>Jeder Bestellprozess ist über eine <code>correlationId</code> in allen beteiligten Services auffindbar.</li><li>Grafana zeigt Bestellungen pro Intervall, Fehlerrate nach Service und Payment-Ergebnisse.</li><li>Fehlerpfade erzeugen sowohl Audit-Snapshots als auch aussagekräftige Logs.</li><li>Logs enthalten keine Secrets oder vollständigen Zahlungsdaten.</li></ul>
+        </article>
+      </div>
+
+      <nav class="doc-pagination" aria-label="Kapitel wechseln">
+        <a class="button ghost" href="../frontends/09_frontends_simulationssuite.html">Vorheriges Kapitel</a>
+        <a class="button" href="../../index.html#kapitel">Alle Kapitel</a>
+        <a class="button primary" href="../betrieb/11_infrastruktur_deployment_repo.html">Nächstes Kapitel</a>
+      </nav>
+    </main>
+  </body>
+</html>

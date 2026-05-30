@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Frontends und Simulationssuite - Distributed E-Commerce Core</title>
+    <link rel="stylesheet" href="../../assets/styles.css" />
+  </head>
+  <body class="doc-page">
+    <a class="skip-link" href="#inhalt">Zum Inhalt springen</a>
+
+    <aside class="sidebar doc-sidebar" aria-label="Konzeptnavigation">
+      <a class="brand brand-link" href="../../index.html">
+        <span class="brand-mark">DEC</span>
+        <span>
+          <strong>Distributed E-Commerce Core</strong>
+          <small>HTML-Konzept</small>
+        </span>
+      </a>
+      <nav class="chapter-nav" aria-label="Kapitel">
+        <div class="chapter-nav-group"><p>Grundlagen</p><a href="../grundlagen/00_quickstart_und_leseweg.html"><span>00</span>Quickstart und Leseweg</a><a href="../grundlagen/01_anforderungen_ziele_scope.html"><span>01</span>Anforderungen, Ziele und Scope</a><a href="../grundlagen/01a_anforderungsdokument.html"><span>REQ</span>Anforderungsdokument</a></div><div class="chapter-nav-group"><p>Architektur</p><a href="../architektur/02_systemarchitektur_kommunikation.html"><span>02</span>Systemarchitektur und Kommunikation</a><a href="../architektur/07_saga_transaktionen_konsistenz.html"><span>07</span>Saga, Transaktionen und Konsistenz</a></div><div class="chapter-nav-group"><p>Services</p><a href="../services/03_service_shop.html"><span>03</span>Shop-Service</a><a href="../services/04_service_warehouse.html"><span>04</span>Warehouse-Service</a><a href="../services/05_service_billing_invoice.html"><span>05</span>Billing und Invoice</a><a href="../services/06_audit_service.html"><span>06</span>Audit-Service</a></div><div class="chapter-nav-group"><p>Qualität</p><a href="../qualitaet/08_idempotenz_resilienz_security.html"><span>08</span>Idempotenz, Resilienz und Security</a><a href="../qualitaet/10_observability_logging_tracing.html"><span>10</span>Observability, Logging und Tracing</a><a href="../qualitaet/12_tests_abnahme_demo.html"><span>12</span>Tests, Abnahme und Demo</a></div><div class="chapter-nav-group"><p>Frontends</p><a href="09_frontends_simulationssuite.html" aria-current="page"><span>09</span>Frontends und Simulationssuite</a></div><div class="chapter-nav-group"><p>Betrieb</p><a href="../betrieb/11_infrastruktur_deployment_repo.html"><span>11</span>Infrastruktur, Deployment und Repository</a></div><div class="chapter-nav-group"><p>Planung</p><a href="../planung/13_umsetzungsplan_roadmap.html"><span>13</span>Umsetzungsplan und Roadmap</a></div>
+      </nav>
+    <a class="sidebar-action" href="../../index.html">Zur Gesamtübersicht</a>
+    </aside>
+
+    <main id="inhalt" class="page-shell doc-shell">
+      <header class="doc-hero">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../../index.html">Übersicht</a>
+          <span>Frontends</span>
+          <span>Kapitel 09</span>
+        </nav>
+        <p class="eyebrow">Kapitel 09</p>
+        <h1>Frontends und Simulationssuite</h1>
+        <p class="lead">Customer Storefront, Admin Dashboard, Warehouse WMS, Simulation Panel und demo-taugliche UI-Flows.</p>
+        <div class="doc-actions">
+          <a class="button ghost" href="../qualitaet/08_idempotenz_resilienz_security.html">Vorheriges Kapitel</a>
+          <a class="button" href="../../09_frontends_simulationssuite.md">Markdown-Quelle</a>
+          <a class="button primary" href="../qualitaet/10_observability_logging_tracing.html">Nächstes Kapitel</a>
+        </div>
+      </header>
+
+      
+
+      <div class="doc-layout">
+        <aside class="toc-card" aria-label="Inhaltsverzeichnis"><strong>Inhalt</strong><a class="toc-level-2" href="#ziel-der-frontend-architektur">Ziel der Frontend-Architektur</a><a class="toc-level-2" href="#frontend-landkarte">Frontend-Landkarte</a><a class="toc-level-2" href="#gemeinsame-frontend-grundsaetze">Gemeinsame Frontend-Grundsätze</a><a class="toc-level-2" href="#customer-storefront">Customer Storefront</a><a class="toc-level-3" href="#zweck">Zweck</a><a class="toc-level-3" href="#hauptseiten">Hauptseiten</a><a class="toc-level-3" href="#erwartete-komponenten">Erwartete Komponenten</a><a class="toc-level-3" href="#idempotenz-in-der-ui">Idempotenz in der UI</a><a class="toc-level-2" href="#admin-dashboard">Admin Dashboard</a><a class="toc-level-3" href="#zweck-2">Zweck</a><a class="toc-level-3" href="#hauptseiten-2">Hauptseiten</a><a class="toc-level-3" href="#order-tabelle">Order-Tabelle</a><a class="toc-level-3" href="#audit-timeline">Audit-Timeline</a><a class="toc-level-2" href="#warehouse-wms">Warehouse WMS</a><a class="toc-level-3" href="#zweck-3">Zweck</a><a class="toc-level-3" href="#hauptseiten-3">Hauptseiten</a><a class="toc-level-3" href="#bestandstabelle">Bestandstabelle</a><a class="toc-level-3" href="#wareneingang">Wareneingang</a><a class="toc-level-2" href="#simulation-panel">Simulation Panel</a><a class="toc-level-2" href="#zweck-4">Zweck</a><a class="toc-level-2" href="#funktionen">Funktionen</a><a class="toc-level-2" href="#demo-workflow-im-panel">Demo-Workflow im Panel</a><a class="toc-level-2" href="#zustandsvisualisierung">Zustandsvisualisierung</a><a class="toc-level-2" href="#api-bedarf-der-frontends">API-Bedarf der Frontends</a><a class="toc-level-2" href="#frontend-zustandsmanagement">Frontend-Zustandsmanagement</a><a class="toc-level-2" href="#rollenabhaengige-navigation">Rollenabhängige Navigation</a><a class="toc-level-2" href="#demo-anforderungen">Demo-Anforderungen</a><a class="toc-level-2" href="#akzeptanzkriterien">Akzeptanzkriterien</a></aside>
+        <article class="article-content">
+          <h1 id="frontends-und-simulationssuite"><a class="anchor-link" href="#frontends-und-simulationssuite" aria-label="Abschnitt verlinken">#</a>Frontends und Simulationssuite</h1>
+<h2 id="ziel-der-frontend-architektur"><a class="anchor-link" href="#ziel-der-frontend-architektur" aria-label="Abschnitt verlinken">#</a>Ziel der Frontend-Architektur</h2>
+<p>Die Frontends sollen nicht nur Bedienoberflächen sein, sondern die verteilte Architektur sichtbar machen. Besonders für Präsentation und Bewertung ist entscheidend, dass Bestellstatus, Audit-Snapshots, Lagerbewegungen, Payment-Zustände und Fehlerpfade nachvollziehbar dargestellt werden.</p>
+<h2 id="frontend-landkarte"><a class="anchor-link" href="#frontend-landkarte" aria-label="Abschnitt verlinken">#</a>Frontend-Landkarte</h2>
+<div class="table-wrap"><table><thead><tr><th>Frontend</th><th>Zielgruppe</th><th>Hauptzweck</th></tr></thead><tbody><tr><td>Customer Storefront</td><td>Kunden</td><td>Einkauf, Warenkorb, Checkout, Bestellstatus.</td></tr><tr><td>Admin Dashboard</td><td>Admins, Prüfer</td><td>Bestellungen, Audit-Timeline, technische Analyse.</td></tr><tr><td>Warehouse WMS</td><td>Logistik</td><td>Bestandsmonitor, Wareneingänge, Reservierungen.</td></tr><tr><td>Simulation Panel</td><td>Präsentierende, Entwickler</td><td>Happy Path, Fehler, Concurrency und Webhook-Latenz steuern.</td></tr></tbody></table></div>
+<h2 id="gemeinsame-frontend-grundsaetze"><a class="anchor-link" href="#gemeinsame-frontend-grundsaetze" aria-label="Abschnitt verlinken">#</a>Gemeinsame Frontend-Grundsätze</h2>
+<ul><li>Alle Business-APIs laufen über den Shop-Service.</li><li>JWT wird zentral verwaltet.</li><li><code>X-Correlation-Id</code> wird angezeigt, sobald sie vorhanden ist.</li><li>Lange Saga-Schritte werden als Prozesszustände visualisiert.</li><li>Fehler werden mit Problem-Details-Code und verständlicher Kurzmeldung angezeigt.</li><li>Admin-Views bieten technische Details, Customer-Views bleiben nutzerfreundlich.</li></ul>
+<h2 id="customer-storefront"><a class="anchor-link" href="#customer-storefront" aria-label="Abschnitt verlinken">#</a>Customer Storefront</h2>
+<h3 id="zweck"><a class="anchor-link" href="#zweck" aria-label="Abschnitt verlinken">#</a>Zweck</h3>
+<p>Die Storefront simuliert das Einkaufserlebnis. Sie muss einfach genug für eine Demo sein, aber realistisch genug, um Warenkorb, Checkout und asynchrone Zustände sichtbar zu machen.</p>
+<h3 id="hauptseiten"><a class="anchor-link" href="#hauptseiten" aria-label="Abschnitt verlinken">#</a>Hauptseiten</h3>
+<div class="table-wrap"><table><thead><tr><th>Route</th><th>Inhalt</th></tr></thead><tbody><tr><td><code>/login</code></td><td>Login und Registrierung.</td></tr><tr><td><code>/products</code></td><td>Produktliste mit Filterung und Paginierung.</td></tr><tr><td><code>/products/:id</code></td><td>Produktdetails.</td></tr><tr><td><code>/basket</code></td><td>Warenkorb mit Mengensteuerung.</td></tr><tr><td><code>/checkout</code></td><td>Bestellauslösung und Zahlungsdaten-Simulation.</td></tr><tr><td><code>/orders/:correlationId</code></td><td>Bestellstatus und Fortschritt.</td></tr></tbody></table></div>
+<h3 id="erwartete-komponenten"><a class="anchor-link" href="#erwartete-komponenten" aria-label="Abschnitt verlinken">#</a>Erwartete Komponenten</h3>
+<ul><li>Produktkarte mit Preis, Verfügbarkeitshinweis und Warenkorb-Aktion.</li><li>Warenkorbposition mit Menge, Einzelpreis und Summe.</li><li>Checkout-Button mit Idempotenzschutz gegen Doppelklick.</li><li>Prozessanzeige für Saga-Schritte.</li><li>Statushinweise für <code>PAYMENT_PENDING</code>, <code>COMPLETED</code>, <code>OUT_OF_STOCK</code> und <code>PAYMENT_FAILED</code>.</li></ul>
+<h3 id="idempotenz-in-der-ui"><a class="anchor-link" href="#idempotenz-in-der-ui" aria-label="Abschnitt verlinken">#</a>Idempotenz in der UI</h3>
+<p>Die UI soll bei Klick auf Kaufen:</p>
+<ul><li>Einen neuen <code>X-Idempotency-Key</code> erzeugen.</li><li>Den Button während der laufenden Anfrage deaktivieren.</li><li>Bei Netzwerkfehler Wiederholen mit demselben Key erlauben.</li><li>Die erhaltene <code>correlationId</code> speichern.</li><li>Den Nutzer auf die Bestellstatus-Seite führen.</li></ul>
+<h2 id="admin-dashboard"><a class="anchor-link" href="#admin-dashboard" aria-label="Abschnitt verlinken">#</a>Admin Dashboard</h2>
+<h3 id="zweck-2"><a class="anchor-link" href="#zweck-2" aria-label="Abschnitt verlinken">#</a>Zweck</h3>
+<p>Das Admin Dashboard ist die technische Beobachtungszentrale. Es zeigt alle Bestellungen, ihren Status und die vollständige Audit-Timeline.</p>
+<h3 id="hauptseiten-2"><a class="anchor-link" href="#hauptseiten-2" aria-label="Abschnitt verlinken">#</a>Hauptseiten</h3>
+<div class="table-wrap"><table><thead><tr><th>Route</th><th>Inhalt</th></tr></thead><tbody><tr><td><code>/admin/orders</code></td><td>Tabelle aller Bestellungen.</td></tr><tr><td><code>/admin/orders/:correlationId</code></td><td>Detailansicht mit Audit-Timeline.</td></tr><tr><td><code>/admin/products/new</code></td><td>Produktanlage.</td></tr><tr><td><code>/admin/audit</code></td><td>Audit-Suche und Stream.</td></tr><tr><td><code>/admin/simulation</code></td><td>Link oder eingebettetes Simulation Panel.</td></tr></tbody></table></div>
+<h3 id="order-tabelle"><a class="anchor-link" href="#order-tabelle" aria-label="Abschnitt verlinken">#</a>Order-Tabelle</h3>
+<p>Spalten:</p>
+<ul><li><code>correlationId</code>.</li><li>Nutzer oder Customer-ID.</li><li>Status.</li><li>Gesamtbetrag.</li><li>Zeitpunkt.</li><li>Payment-Status.</li><li>Warehouse-Status.</li><li>Anzahl Audit-Events.</li></ul>
+<p>Filter:</p>
+<ul><li>Status.</li><li>Zeitraum.</li><li><code>correlationId</code>.</li><li>Fehlercode.</li><li>Service.</li></ul>
+<h3 id="audit-timeline"><a class="anchor-link" href="#audit-timeline" aria-label="Abschnitt verlinken">#</a>Audit-Timeline</h3>
+<p>Die Timeline zeigt pro Event:</p>
+<ul><li>Zeitpunkt.</li><li>Quelle.</li><li>Eventtyp.</li><li>Kurzbeschreibung.</li><li>Statuschip.</li><li>Aufklappbarer JSON-Payload.</li><li>Link zu Logs mit derselben <code>correlationId</code>.</li></ul>
+<p>Die Timeline aktualisiert sich live über SSE oder WebSocket.</p>
+<h2 id="warehouse-wms"><a class="anchor-link" href="#warehouse-wms" aria-label="Abschnitt verlinken">#</a>Warehouse WMS</h2>
+<h3 id="zweck-3"><a class="anchor-link" href="#zweck-3" aria-label="Abschnitt verlinken">#</a>Zweck</h3>
+<p>Das WMS macht Lagerzustände sichtbar. Es richtet sich an Logistik-Mitarbeiter und ist gleichzeitig ein Demonstrationswerkzeug für Reservierung und finale Ausbuchung.</p>
+<h3 id="hauptseiten-3"><a class="anchor-link" href="#hauptseiten-3" aria-label="Abschnitt verlinken">#</a>Hauptseiten</h3>
+<div class="table-wrap"><table><thead><tr><th>Route</th><th>Inhalt</th></tr></thead><tbody><tr><td><code>/warehouse/stocks</code></td><td>Bestandstabelle.</td></tr><tr><td><code>/warehouse/products/:productId</code></td><td>Detail mit Bewegungen.</td></tr><tr><td><code>/warehouse/inbound</code></td><td>Wareneingang erfassen.</td></tr><tr><td><code>/warehouse/reservations</code></td><td>Aktive und abgeschlossene Reservierungen.</td></tr></tbody></table></div>
+<h3 id="bestandstabelle"><a class="anchor-link" href="#bestandstabelle" aria-label="Abschnitt verlinken">#</a>Bestandstabelle</h3>
+<p>Spalten:</p>
+<ul><li>Produktname und SKU.</li><li>Freier Bestand.</li><li>Reservierter Bestand.</li><li>Gebuchter Bestand.</li><li>Letzte Bewegung.</li><li>Warnstatus bei niedrigem Bestand.</li></ul>
+<h3 id="wareneingang"><a class="anchor-link" href="#wareneingang" aria-label="Abschnitt verlinken">#</a>Wareneingang</h3>
+<p>Die Wareneingangsmaske sendet <code>PATCH /v1/warehouse/products/{productId}/stock</code> über den Shop-Service oder ein internes Gateway.</p>
+<p>Pflichtfelder:</p>
+<ul><li>Produkt.</li><li>Menge.</li><li>Grund.</li><li>Referenz.</li></ul>
+<h2 id="simulation-panel"><a class="anchor-link" href="#simulation-panel" aria-label="Abschnitt verlinken">#</a>Simulation Panel</h2>
+<h2 id="zweck-4"><a class="anchor-link" href="#zweck-4" aria-label="Abschnitt verlinken">#</a>Zweck</h2>
+<p>Das Simulation Panel ist das Live-Demo-Control-Panel. Es erzeugt kontrollierte Systemzustände, ohne dass man während der Präsentation manuell Datenbanken manipulieren muss.</p>
+<h2 id="funktionen"><a class="anchor-link" href="#funktionen" aria-label="Abschnitt verlinken">#</a>Funktionen</h2>
+<div class="table-wrap"><table><thead><tr><th>Funktion</th><th>Wirkung</th></tr></thead><tbody><tr><td>Happy-Path-Trigger</td><td>Erzeugt Musterwarenkorb und startet Bestellung.</td></tr><tr><td>Payment-Ablehnung</td><td>Nächster Payment-Aufruf schlägt fehl.</td></tr><tr><td>Warehouse-Booking-Fehler</td><td>Nächste finale Ausbuchung schlägt fehl.</td></tr><tr><td>Invoice-Crash</td><td>Invoice-Service wirft Fehler und öffnet Circuit Breaker.</td></tr><tr><td>Concurrency-Test</td><td>Zwei parallele Bestellungen auf denselben knappen Bestand.</td></tr><tr><td>Webhook-Latenz</td><td>Slider steuert Verzögerung des asynchronen Payment-Stubs.</td></tr><tr><td>Daten zurücksetzen</td><td>Demo-Daten werden in definierten Startzustand gebracht.</td></tr></tbody></table></div>
+<h2 id="demo-workflow-im-panel"><a class="anchor-link" href="#demo-workflow-im-panel" aria-label="Abschnitt verlinken">#</a>Demo-Workflow im Panel</h2>
+<ol><li>Demo-Datensatz initialisieren.</li><li>Produktbestand und Nutzer prüfen.</li><li>Gewünschtes Szenario auswählen.</li><li>Start klicken.</li><li>Live-Verlinkung zu Admin-Timeline öffnen.</li><li>Logs oder Grafana-Panel zur <code>correlationId</code> anzeigen.</li></ol>
+<h2 id="zustandsvisualisierung"><a class="anchor-link" href="#zustandsvisualisierung" aria-label="Abschnitt verlinken">#</a>Zustandsvisualisierung</h2>
+<p>Die Simulation View sollte eine technische Prozessleiste anzeigen:</p>
+<pre class="code-block language-text"><code>Order Created -&gt; Reserved -&gt; Payment -&gt; Booking -&gt; Completed</code></pre>
+<p>Bei Fehlern werden Kompensationsschritte sichtbar ergänzt:</p>
+<pre class="code-block language-text"><code>Order Created -&gt; Reserved -&gt; Payment Failed -&gt; Reservation Cancelled -&gt; Payment Failed</code></pre>
+<h2 id="api-bedarf-der-frontends"><a class="anchor-link" href="#api-bedarf-der-frontends" aria-label="Abschnitt verlinken">#</a>API-Bedarf der Frontends</h2>
+<p>Die Frontends benötigen gebündelte View-Endpunkte, damit sie nicht zu viel interne Service-Logik kennen.</p>
+<p>Empfohlene Shop-Endpunkte:</p>
+<div class="table-wrap"><table><thead><tr><th>Endpunkt</th><th>Zweck</th></tr></thead><tbody><tr><td><code>GET /v1/me</code></td><td>Aktueller Nutzer und Rollen.</td></tr><tr><td><code>GET /v1/products</code></td><td>Produktliste.</td></tr><tr><td><code>GET /v1/baskets</code></td><td>Warenkorb.</td></tr><tr><td><code>POST /v1/orders</code></td><td>Checkout starten.</td></tr><tr><td><code>GET /v1/orders/{correlationId}</code></td><td>Statuspolling oder Detail.</td></tr><tr><td><code>GET /v1/admin/orders</code></td><td>Admin-Tabelle.</td></tr><tr><td><code>GET /v1/admin/orders/{correlationId}/timeline</code></td><td>Kombinierte Order- und Audit-Sicht.</td></tr><tr><td><code>GET /v1/admin/audit/stream</code></td><td>Live-Events.</td></tr><tr><td><code>POST /v1/admin/simulation/*</code></td><td>Simulationssteuerung.</td></tr></tbody></table></div>
+<h2 id="frontend-zustandsmanagement"><a class="anchor-link" href="#frontend-zustandsmanagement" aria-label="Abschnitt verlinken">#</a>Frontend-Zustandsmanagement</h2>
+<p>Empfohlen:</p>
+<ul><li>React Query oder vergleichbare Datenbibliothek für Server State.</li><li>Lokaler State nur für UI-Zustände wie Dialoge und Filter.</li><li>SSE-Verbindung im Admin Dashboard für Live-Audit.</li><li>Optimistische Updates nur bei ungefährlichen UI-Aktionen, nicht bei Checkout.</li></ul>
+<h2 id="rollenabhaengige-navigation"><a class="anchor-link" href="#rollenabhaengige-navigation" aria-label="Abschnitt verlinken">#</a>Rollenabhängige Navigation</h2>
+<div class="table-wrap"><table><thead><tr><th>Rolle</th><th>Sichtbare Bereiche</th></tr></thead><tbody><tr><td><code>CUSTOMER</code></td><td>Storefront, Warenkorb, eigene Bestellungen.</td></tr><tr><td><code>ADMIN</code></td><td>Admin Dashboard, Produkterstellung, Simulation, Audit.</td></tr><tr><td><code>LOGISTICS</code></td><td>Warehouse WMS, Wareneingang, Bestand.</td></tr></tbody></table></div>
+<h2 id="demo-anforderungen"><a class="anchor-link" href="#demo-anforderungen" aria-label="Abschnitt verlinken">#</a>Demo-Anforderungen</h2>
+<p>Für die Präsentation sollten alle Views mit wenigen Klicks verständliche Zustände erzeugen:</p>
+<ul><li>Ein Klick für Happy Path.</li><li>Ein Klick für Payment-Fehler.</li><li>Ein Klick für Warehouse-Booking-Fehler.</li><li>Ein Klick für Concurrency-Test.</li><li>Slider für Webhook-Latenz.</li><li>Direkter Link zur Audit-Timeline jeder gestarteten Demo-Bestellung.</li></ul>
+<h2 id="akzeptanzkriterien"><a class="anchor-link" href="#akzeptanzkriterien" aria-label="Abschnitt verlinken">#</a>Akzeptanzkriterien</h2>
+<ul><li>Customer kann eine Bestellung starten und den Status sehen.</li><li>Admin sieht alle Audit-Snapshots ohne Reload.</li><li>WMS zeigt freie und reservierte Bestände korrekt.</li><li>Simulation Panel kann definierte Fehler reproduzierbar auslösen.</li><li>Die UI zeigt <code>correlationId</code> an technischen Stellen sichtbar an.</li><li>Fehlerzustände sind verständlich, aber nicht mit internen Stacktraces vermischt.</li></ul>
+        </article>
+      </div>
+
+      <nav class="doc-pagination" aria-label="Kapitel wechseln">
+        <a class="button ghost" href="../qualitaet/08_idempotenz_resilienz_security.html">Vorheriges Kapitel</a>
+        <a class="button" href="../../index.html#kapitel">Alle Kapitel</a>
+        <a class="button primary" href="../qualitaet/10_observability_logging_tracing.html">Nächstes Kapitel</a>
+      </nav>
+    </main>
+  </body>
+</html>

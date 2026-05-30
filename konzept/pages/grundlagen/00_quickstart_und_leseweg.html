@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Quickstart und Leseweg - Distributed E-Commerce Core</title>
+    <link rel="stylesheet" href="../../assets/styles.css" />
+  </head>
+  <body class="doc-page">
+    <a class="skip-link" href="#inhalt">Zum Inhalt springen</a>
+
+    <aside class="sidebar doc-sidebar" aria-label="Konzeptnavigation">
+      <a class="brand brand-link" href="../../index.html">
+        <span class="brand-mark">DEC</span>
+        <span>
+          <strong>Distributed E-Commerce Core</strong>
+          <small>HTML-Konzept</small>
+        </span>
+      </a>
+      <nav class="chapter-nav" aria-label="Kapitel">
+        <div class="chapter-nav-group"><p>Grundlagen</p><a href="00_quickstart_und_leseweg.html" aria-current="page"><span>00</span>Quickstart und Leseweg</a><a href="01_anforderungen_ziele_scope.html"><span>01</span>Anforderungen, Ziele und Scope</a><a href="01a_anforderungsdokument.html"><span>REQ</span>Anforderungsdokument</a></div><div class="chapter-nav-group"><p>Architektur</p><a href="../architektur/02_systemarchitektur_kommunikation.html"><span>02</span>Systemarchitektur und Kommunikation</a><a href="../architektur/07_saga_transaktionen_konsistenz.html"><span>07</span>Saga, Transaktionen und Konsistenz</a></div><div class="chapter-nav-group"><p>Services</p><a href="../services/03_service_shop.html"><span>03</span>Shop-Service</a><a href="../services/04_service_warehouse.html"><span>04</span>Warehouse-Service</a><a href="../services/05_service_billing_invoice.html"><span>05</span>Billing und Invoice</a><a href="../services/06_audit_service.html"><span>06</span>Audit-Service</a></div><div class="chapter-nav-group"><p>Qualität</p><a href="../qualitaet/08_idempotenz_resilienz_security.html"><span>08</span>Idempotenz, Resilienz und Security</a><a href="../qualitaet/10_observability_logging_tracing.html"><span>10</span>Observability, Logging und Tracing</a><a href="../qualitaet/12_tests_abnahme_demo.html"><span>12</span>Tests, Abnahme und Demo</a></div><div class="chapter-nav-group"><p>Frontends</p><a href="../frontends/09_frontends_simulationssuite.html"><span>09</span>Frontends und Simulationssuite</a></div><div class="chapter-nav-group"><p>Betrieb</p><a href="../betrieb/11_infrastruktur_deployment_repo.html"><span>11</span>Infrastruktur, Deployment und Repository</a></div><div class="chapter-nav-group"><p>Planung</p><a href="../planung/13_umsetzungsplan_roadmap.html"><span>13</span>Umsetzungsplan und Roadmap</a></div>
+      </nav>
+    <a class="sidebar-action" href="../../index.html">Zur Gesamtübersicht</a>
+    </aside>
+
+    <main id="inhalt" class="page-shell doc-shell">
+      <header class="doc-hero">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../../index.html">Übersicht</a>
+          <span>Grundlagen</span>
+          <span>Kapitel 00</span>
+        </nav>
+        <p class="eyebrow">Kapitel 00</p>
+        <h1>Quickstart und Leseweg</h1>
+        <p class="lead">Orientierung, Zielbild, Grundprinzipien und empfohlene Lesereihenfolge für das gesamte Konzept.</p>
+        <div class="doc-actions">
+          
+          <a class="button" href="../../00_quickstart_und_leseweg.md">Markdown-Quelle</a>
+          <a class="button primary" href="01_anforderungen_ziele_scope.html">Nächstes Kapitel</a>
+        </div>
+      </header>
+
+      
+
+      <div class="doc-layout">
+        <aside class="toc-card" aria-label="Inhaltsverzeichnis"><strong>Inhalt</strong><a class="toc-level-2" href="#zweck-dieses-konzepts">Zweck dieses Konzepts</a><a class="toc-level-2" href="#empfohlener-einstieg">Empfohlener Einstieg</a><a class="toc-level-2" href="#zielbild-in-einem-satz">Zielbild in einem Satz</a><a class="toc-level-2" href="#wichtigste-architekturentscheidungen">Wichtigste Architekturentscheidungen</a><a class="toc-level-2" href="#ergebnisartefakte">Ergebnisartefakte</a><a class="toc-level-2" href="#begriffe">Begriffe</a><a class="toc-level-2" href="#abgrenzung">Abgrenzung</a></aside>
+        <article class="article-content">
+          <h1 id="quickstart-und-leseweg"><a class="anchor-link" href="#quickstart-und-leseweg" aria-label="Abschnitt verlinken">#</a>Quickstart und Leseweg</h1>
+<h2 id="zweck-dieses-konzepts"><a class="anchor-link" href="#zweck-dieses-konzepts" aria-label="Abschnitt verlinken">#</a>Zweck dieses Konzepts</h2>
+<p>Dieses Konzept übersetzt das PDF in einen umsetzbaren, teamtauglichen Architektur- und Implementierungsplan. Es beschreibt nicht nur die Zielarchitektur, sondern konkretisiert Verantwortlichkeiten, Schnittstellen, Datenflüsse, Fehlerpfade, Testfälle, Deployment-Bausteine und Demo-Szenarien.</p>
+<p>Das Ziel ist ein verteilter Online-Shop als Microservice-System mit folgenden Schwerpunkten:</p>
+<ul><li>Strikte fachliche Trennung der Services.</li><li>Eigene Datenhaltung je Service.</li><li>Orchestrierte Saga für verteilte Konsistenz.</li><li>Belastbare Bestandsführung mit pessimistischen Datenbanksperren.</li><li>Konfigurierbare Payment-Fassade mit synchronen und asynchronen Anbieter-Stubs.</li><li>Audit-Snapshots für Nachvollziehbarkeit, Debugging und Admin-Visualisierung.</li><li>Mehrere Frontend-Views für Kunden, Administration, Lager und Simulation.</li><li>Docker-Compose-basierter Betrieb mit Observability-Stack.</li></ul>
+<h2 id="empfohlener-einstieg"><a class="anchor-link" href="#empfohlener-einstieg" aria-label="Abschnitt verlinken">#</a>Empfohlener Einstieg</h2>
+<p>Wer das System zuerst verstehen möchte, liest in dieser Reihenfolge:</p>
+<ol><li>Ziele und Scope in <a href="01_anforderungen_ziele_scope.html">Anforderungen, Ziele und Scope</a>.</li><li>Architektur und Kommunikation in <a href="../architektur/02_systemarchitektur_kommunikation.html">Systemarchitektur und Kommunikation</a>.</li><li>Saga-Abläufe in <a href="../architektur/07_saga_transaktionen_konsistenz.html">Saga, Transaktionen und Konsistenz</a>.</li><li>Service-Details in <a href="../services/03_service_shop.html">Shop-Service</a>, <a href="../services/04_service_warehouse.html">Warehouse-Service</a>, <a href="../services/05_service_billing_invoice.html">Billing und Invoice</a> und <a href="../services/06_audit_service.html">Audit-Service</a>.</li><li>Frontend- und Demo-Sicht in <a href="../frontends/09_frontends_simulationssuite.html">Frontends und Simulationssuite</a>.</li><li>Tests und Abnahme in <a href="../qualitaet/12_tests_abnahme_demo.html">Tests, Abnahme und Demo</a>.</li></ol>
+<h2 id="zielbild-in-einem-satz"><a class="anchor-link" href="#zielbild-in-einem-satz" aria-label="Abschnitt verlinken">#</a>Zielbild in einem Satz</h2>
+<p>Das System soll demonstrieren, wie ein realistisch verteilter E-Commerce-Kern trotz getrennter Datenbanken, synchroner und asynchroner Kommunikation, Zahlungsfehlern, Nebenläufigkeit und Service-Ausfällen einen nachvollziehbaren, konsistenten und präsentierbaren Bestellprozess abbildet.</p>
+<h2 id="wichtigste-architekturentscheidungen"><a class="anchor-link" href="#wichtigste-architekturentscheidungen" aria-label="Abschnitt verlinken">#</a>Wichtigste Architekturentscheidungen</h2>
+<div class="table-wrap"><table><thead><tr><th>Entscheidung</th><th>Konsequenz</th></tr></thead><tbody><tr><td>Shop-Service als einziges Gateway</td><td>Frontends sprechen keine internen Services direkt an.</td></tr><tr><td>Datenbank pro Service</td><td>Keine versteckte Kopplung über gemeinsame Tabellen.</td></tr><tr><td>Saga-Orchestrierung im Shop-Service</td><td>Bestellfluss bleibt zentral nachvollziehbar und kompensierbar.</td></tr><tr><td>RabbitMQ für Domain-Events</td><td>Rechnung und Audit laufen entkoppelt und robust.</td></tr><tr><td>Redis für Idempotenz und Sessions</td><td>Doppelbestellungen und Wiederholungen werden kontrolliert.</td></tr><tr><td>PostgreSQL <code>SELECT ... FOR UPDATE</code> im Warehouse</td><td>Überverkäufe werden auf Datenbankebene verhindert.</td></tr><tr><td>Payment-Fassade im Billing-Service</td><td>Anbieter können gewechselt oder erweitert werden, ohne Business-Code umzubauen.</td></tr><tr><td>Audit-Service ohne Business-Logik</td><td>Audit bleibt generisch, append-only und langfristig auswertbar.</td></tr></tbody></table></div>
+<h2 id="ergebnisartefakte"><a class="anchor-link" href="#ergebnisartefakte" aria-label="Abschnitt verlinken">#</a>Ergebnisartefakte</h2>
+<p>Das fertige Projekt soll mindestens diese Artefakte enthalten:</p>
+<ul><li><code>docker-compose.yml</code> zum Start aller Services und Infrastrukturkomponenten.</li><li>Fünf Backend-Services: Shop, Warehouse, Billing, Invoice, Audit.</li><li>Vier Frontends: Customer Storefront, Admin Dashboard, Warehouse WMS, Simulation Panel.</li><li>PostgreSQL-Instanzen pro zustandsbehaftetem Service.</li><li>RabbitMQ für asynchrone Events.</li><li>Redis für Idempotenz und Sessions.</li><li>Loki/Grafana oder vergleichbarer Stack für Logs und Dashboards.</li><li>Dokumentierte APIs, Datenmodelle, Events, ADRs und Demo-Skripte.</li></ul>
+<h2 id="begriffe"><a class="anchor-link" href="#begriffe" aria-label="Abschnitt verlinken">#</a>Begriffe</h2>
+<div class="table-wrap"><table><thead><tr><th>Begriff</th><th>Bedeutung</th></tr></thead><tbody><tr><td><code>correlationId</code></td><td>Eindeutiger technischer Schlüssel für einen Bestell- oder Prozessdurchlauf.</td></tr><tr><td><code>X-Correlation-Id</code></td><td>HTTP-Header zur Weitergabe der Prozessidentität zwischen Services.</td></tr><tr><td><code>X-Idempotency-Key</code></td><td>Client-seitig erzeugter Schlüssel zur Verhinderung doppelter Bestellverarbeitung.</td></tr><tr><td>Saga</td><td>Folge lokaler Transaktionen mit Kompensationsschritten statt verteilter ACID-Transaktion.</td></tr><tr><td>Snapshot</td><td>Unveränderlicher Audit-Datensatz zu einem Zustand oder Ereignis.</td></tr><tr><td>Payment-Fassade</td><td>Einheitliche Schnittstelle vor mehreren Zahlungsanbieter-Adaptern.</td></tr><tr><td>Reservation</td><td>Temporäre Lagerblockierung vor Zahlung und finaler Ausbuchung.</td></tr><tr><td>Booking</td><td>Endgültige Abbuchung reservierter Ware nach erfolgreicher Zahlung.</td></tr></tbody></table></div>
+<h2 id="abgrenzung"><a class="anchor-link" href="#abgrenzung" aria-label="Abschnitt verlinken">#</a>Abgrenzung</h2>
+<p>Das Konzept beschreibt ein simulatorisches Universitätsprojekt. Es ist bewusst realitätsnah aufgebaut, bindet aber keine echten Zahlungsanbieter mit echten API-Schlüsseln an. Payment-Anbieter werden über Stubs, MSW und Faker simuliert. Sicherheitsmechanismen wie JWT, Rollen und Guards werden fachlich umgesetzt, ersetzen aber keine produktionsreife Compliance-Prüfung für echte Zahlungsdaten.</p>
+        </article>
+      </div>
+
+      <nav class="doc-pagination" aria-label="Kapitel wechseln">
+        
+        <a class="button" href="../../index.html#kapitel">Alle Kapitel</a>
+        <a class="button primary" href="01_anforderungen_ziele_scope.html">Nächstes Kapitel</a>
+      </nav>
+    </main>
+  </body>
+</html>

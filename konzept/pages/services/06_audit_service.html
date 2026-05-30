@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Audit-Service - Distributed E-Commerce Core</title>
+    <link rel="stylesheet" href="../../assets/styles.css" />
+  </head>
+  <body class="doc-page">
+    <a class="skip-link" href="#inhalt">Zum Inhalt springen</a>
+
+    <aside class="sidebar doc-sidebar" aria-label="Konzeptnavigation">
+      <a class="brand brand-link" href="../../index.html">
+        <span class="brand-mark">DEC</span>
+        <span>
+          <strong>Distributed E-Commerce Core</strong>
+          <small>HTML-Konzept</small>
+        </span>
+      </a>
+      <nav class="chapter-nav" aria-label="Kapitel">
+        <div class="chapter-nav-group"><p>Grundlagen</p><a href="../grundlagen/00_quickstart_und_leseweg.html"><span>00</span>Quickstart und Leseweg</a><a href="../grundlagen/01_anforderungen_ziele_scope.html"><span>01</span>Anforderungen, Ziele und Scope</a><a href="../grundlagen/01a_anforderungsdokument.html"><span>REQ</span>Anforderungsdokument</a></div><div class="chapter-nav-group"><p>Architektur</p><a href="../architektur/02_systemarchitektur_kommunikation.html"><span>02</span>Systemarchitektur und Kommunikation</a><a href="../architektur/07_saga_transaktionen_konsistenz.html"><span>07</span>Saga, Transaktionen und Konsistenz</a></div><div class="chapter-nav-group"><p>Services</p><a href="03_service_shop.html"><span>03</span>Shop-Service</a><a href="04_service_warehouse.html"><span>04</span>Warehouse-Service</a><a href="05_service_billing_invoice.html"><span>05</span>Billing und Invoice</a><a href="06_audit_service.html" aria-current="page"><span>06</span>Audit-Service</a></div><div class="chapter-nav-group"><p>Qualität</p><a href="../qualitaet/08_idempotenz_resilienz_security.html"><span>08</span>Idempotenz, Resilienz und Security</a><a href="../qualitaet/10_observability_logging_tracing.html"><span>10</span>Observability, Logging und Tracing</a><a href="../qualitaet/12_tests_abnahme_demo.html"><span>12</span>Tests, Abnahme und Demo</a></div><div class="chapter-nav-group"><p>Frontends</p><a href="../frontends/09_frontends_simulationssuite.html"><span>09</span>Frontends und Simulationssuite</a></div><div class="chapter-nav-group"><p>Betrieb</p><a href="../betrieb/11_infrastruktur_deployment_repo.html"><span>11</span>Infrastruktur, Deployment und Repository</a></div><div class="chapter-nav-group"><p>Planung</p><a href="../planung/13_umsetzungsplan_roadmap.html"><span>13</span>Umsetzungsplan und Roadmap</a></div>
+      </nav>
+    <a class="sidebar-action" href="../../index.html">Zur Gesamtübersicht</a>
+    </aside>
+
+    <main id="inhalt" class="page-shell doc-shell">
+      <header class="doc-hero">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../../index.html">Übersicht</a>
+          <span>Services</span>
+          <span>Kapitel 06</span>
+        </nav>
+        <p class="eyebrow">Kapitel 06</p>
+        <h1>Audit-Service</h1>
+        <p class="lead">Append-only Snapshots, Timeline-Endpunkte, SSE-Streams, Admin-Lesemodelle und Payload-Maskierung.</p>
+        <div class="doc-actions">
+          <a class="button ghost" href="05_service_billing_invoice.html">Vorheriges Kapitel</a>
+          <a class="button" href="../../06_audit_service.md">Markdown-Quelle</a>
+          <a class="button primary" href="../architektur/07_saga_transaktionen_konsistenz.html">Nächstes Kapitel</a>
+        </div>
+      </header>
+
+      
+
+      <div class="doc-layout">
+        <aside class="toc-card" aria-label="Inhaltsverzeichnis"><strong>Inhalt</strong><a class="toc-level-2" href="#rolle-im-gesamtsystem">Rolle im Gesamtsystem</a><a class="toc-level-2" href="#grundprinzipien">Grundprinzipien</a><a class="toc-level-2" href="#api">API</a><a class="toc-level-2" href="#snapshot-schema">Snapshot-Schema</a><a class="toc-level-2" href="#datenmodell">Datenmodell</a><a class="toc-level-3" href="#audit-snapshots">audit_snapshots</a><a class="toc-level-2" href="#indizes">Indizes</a><a class="toc-level-2" href="#append-only-schutz">Append-only-Schutz</a><a class="toc-level-2" href="#snapshot-verkettung">Snapshot-Verkettung</a><a class="toc-level-2" href="#event-annahme">Event-Annahme</a><a class="toc-level-2" href="#validierung">Validierung</a><a class="toc-level-2" href="#stream-fuer-admin-dashboard">Stream für Admin Dashboard</a><a class="toc-level-2" href="#lesemodelle">Lesemodelle</a><a class="toc-level-3" href="#timeline-pro-bestellung">Timeline pro Bestellung</a><a class="toc-level-3" href="#aggregierte-uebersicht">Aggregierte Übersicht</a><a class="toc-level-2" href="#relevante-eventtypen">Relevante Eventtypen</a><a class="toc-level-2" href="#datenschutz-und-maskierung">Datenschutz und Maskierung</a><a class="toc-level-2" href="#betriebliches-verhalten-bei-ausfall">Betriebliches Verhalten bei Ausfall</a><a class="toc-level-2" href="#abnahmekriterien">Abnahmekriterien</a></aside>
+        <article class="article-content">
+          <h1 id="audit-service"><a class="anchor-link" href="#audit-service" aria-label="Abschnitt verlinken">#</a>Audit-Service</h1>
+<h2 id="rolle-im-gesamtsystem"><a class="anchor-link" href="#rolle-im-gesamtsystem" aria-label="Abschnitt verlinken">#</a>Rolle im Gesamtsystem</h2>
+<p>Der Audit-Service ist der neutrale, append-only Speicher für technische und fachliche Zustandsübergänge. Er besitzt kein Business-Wissen und entscheidet nicht, ob ein Vorgang korrekt ist. Seine Aufgabe ist die unveränderliche Dokumentation dessen, was die Services melden.</p>
+<h2 id="grundprinzipien"><a class="anchor-link" href="#grundprinzipien" aria-label="Abschnitt verlinken">#</a>Grundprinzipien</h2>
+<ul><li>Snapshots werden nur eingefügt, niemals verändert oder gelöscht.</li><li>Jeder Snapshot gehört zu einer <code>correlationId</code>.</li><li>Jeder Snapshot enthält ein <code>eventType</code> und einen JSON-Payload.</li><li>Snapshots können über <code>previousEventId</code> verkettet werden.</li><li>Der Service bietet Lesemodelle für Admin Dashboard und Debugging.</li><li>Echtzeit-Aktualisierung erfolgt über SSE oder WebSocket.</li></ul>
+<h2 id="api"><a class="anchor-link" href="#api" aria-label="Abschnitt verlinken">#</a>API</h2>
+<div class="table-wrap"><table><thead><tr><th>Methode</th><th>Pfad</th><th>Rolle/Aufrufer</th><th>Beschreibung</th></tr></thead><tbody><tr><td><code>POST</code></td><td><code>/v1/audit/snapshots</code></td><td>Interne Services</td><td>Fügt einen neuen Snapshot hinzu.</td></tr><tr><td><code>GET</code></td><td><code>/v1/audit/orders/{correlationId}</code></td><td><code>ADMIN</code></td><td>Liefert die chronologische Historie einer Bestellung.</td></tr><tr><td><code>GET</code></td><td><code>/v1/audit/stream</code></td><td><code>ADMIN</code></td><td>Streamt neue Snapshots für das Dashboard.</td></tr><tr><td><code>GET</code></td><td><code>/v1/audit/search</code></td><td><code>ADMIN</code></td><td>Filtert Snapshots nach Typ, Service, Zeitraum oder Status.</td></tr></tbody></table></div>
+<h2 id="snapshot-schema"><a class="anchor-link" href="#snapshot-schema" aria-label="Abschnitt verlinken">#</a>Snapshot-Schema</h2>
+<pre class="code-block language-json"><code>{
+  &quot;id&quot;: &quot;evt-123&quot;,
+  &quot;correlationId&quot;: &quot;ord-2026-0001&quot;,
+  &quot;eventType&quot;: &quot;PaymentSucceeded&quot;,
+  &quot;sourceService&quot;: &quot;billing-service&quot;,
+  &quot;timestamp&quot;: &quot;2026-05-29T12:00:00.000Z&quot;,
+  &quot;previousEventId&quot;: &quot;evt-122&quot;,
+  &quot;payload&quot;: {
+    &quot;paymentId&quot;: &quot;pay-123&quot;,
+    &quot;provider&quot;: &quot;stripe-sim&quot;,
+    &quot;amountGross&quot;: 259.98,
+    &quot;currency&quot;: &quot;EUR&quot;
+  },
+  &quot;metadata&quot;: {
+    &quot;schemaVersion&quot;: 1,
+    &quot;traceId&quot;: &quot;trace-abc&quot;,
+    &quot;spanId&quot;: &quot;span-def&quot;
+  }
+}</code></pre>
+<h2 id="datenmodell"><a class="anchor-link" href="#datenmodell" aria-label="Abschnitt verlinken">#</a>Datenmodell</h2>
+<h3 id="audit-snapshots"><a class="anchor-link" href="#audit-snapshots" aria-label="Abschnitt verlinken">#</a><code>audit_snapshots</code></h3>
+<div class="table-wrap"><table><thead><tr><th>Feld</th><th>Typ</th><th>Beschreibung</th></tr></thead><tbody><tr><td><code>id</code></td><td>UUID</td><td>Snapshot-ID.</td></tr><tr><td><code>correlation_id</code></td><td>Text</td><td>Prozess-ID.</td></tr><tr><td><code>event_type</code></td><td>Text</td><td>Fachlicher oder technischer Eventtyp.</td></tr><tr><td><code>source_service</code></td><td>Text</td><td>Meldender Service.</td></tr><tr><td><code>timestamp</code></td><td>Timestamp</td><td>Zeitpunkt des Ereignisses.</td></tr><tr><td><code>payload</code></td><td>JSONB</td><td>Eventdaten.</td></tr><tr><td><code>previous_event_id</code></td><td>UUID nullable</td><td>Verkettung innerhalb derselben <code>correlationId</code>.</td></tr><tr><td><code>metadata</code></td><td>JSONB</td><td>Trace, Schema, technische Zusatzdaten.</td></tr><tr><td><code>inserted_at</code></td><td>Timestamp</td><td>Zeitpunkt der Persistierung.</td></tr></tbody></table></div>
+<h2 id="indizes"><a class="anchor-link" href="#indizes" aria-label="Abschnitt verlinken">#</a>Indizes</h2>
+<p>Empfohlene Datenbankindizes:</p>
+<pre class="code-block language-sql"><code>CREATE INDEX idx_audit_correlation_time
+ON audit_snapshots (correlation_id, timestamp);
+
+CREATE INDEX idx_audit_event_type
+ON audit_snapshots (event_type);
+
+CREATE INDEX idx_audit_source_service
+ON audit_snapshots (source_service);
+
+CREATE INDEX idx_audit_payload_gin
+ON audit_snapshots USING gin (payload);</code></pre>
+<h2 id="append-only-schutz"><a class="anchor-link" href="#append-only-schutz" aria-label="Abschnitt verlinken">#</a>Append-only-Schutz</h2>
+<p>Der Append-only-Charakter sollte nicht nur in der Applikation, sondern zusätzlich in der Datenbank abgesichert werden.</p>
+<p>Empfohlene Maßnahmen:</p>
+<ul><li>Keine Repository-Methoden für Update oder Delete anbieten.</li><li>Datenbankrolle der Anwendung erhält nur <code>INSERT</code> und <code>SELECT</code>.</li><li>Optional Trigger definieren, die <code>UPDATE</code> und <code>DELETE</code> blockieren.</li><li>Migrationen für Audit-Tabellen besonders restriktiv behandeln.</li></ul>
+<h2 id="snapshot-verkettung"><a class="anchor-link" href="#snapshot-verkettung" aria-label="Abschnitt verlinken">#</a>Snapshot-Verkettung</h2>
+<p><code>previousEventId</code> macht die Timeline nachvollziehbarer. Beim Einfügen eines neuen Snapshots kann der Audit-Service den letzten Snapshot zur <code>correlationId</code> suchen und die neue Zeile darauf verweisen lassen.</p>
+<p>Wichtig:</p>
+<ul><li>Die Verkettung ist hilfreich, aber nicht die einzige Sortierung.</li><li>Chronologische Anzeige sortiert primär nach <code>timestamp</code>, sekundär nach <code>inserted_at</code>.</li><li>Bei parallelen Events können zwei Snapshots denselben Vorgänger haben. Das ist zulässig und wird in der UI als Verzweigung oder zeitgleiche Ereignisse sichtbar.</li></ul>
+<h2 id="event-annahme"><a class="anchor-link" href="#event-annahme" aria-label="Abschnitt verlinken">#</a>Event-Annahme</h2>
+<p>Interne Services können Snapshots synchron per HTTP oder asynchron über RabbitMQ liefern. Für das Projekt ist eine Kombination sinnvoll:</p>
+<ul><li>Kritische Prozess-Snapshots können direkt vom Service an RabbitMQ publiziert werden.</li><li>Der Audit-Service konsumiert diese Events und persistiert sie.</li><li>Ein HTTP-Endpunkt bleibt für einfache Integration, Tests und Simulation nutzbar.</li></ul>
+<h2 id="validierung"><a class="anchor-link" href="#validierung" aria-label="Abschnitt verlinken">#</a>Validierung</h2>
+<p>Der Audit-Service validiert nur technische Mindestanforderungen:</p>
+<ul><li><code>correlationId</code> vorhanden.</li><li><code>eventType</code> vorhanden.</li><li><code>sourceService</code> bekannt oder als Text gesetzt.</li><li><code>timestamp</code> parsebar.</li><li><code>payload</code> ist valides JSON.</li><li>Payload-Größe bleibt unter definierter Grenze.</li></ul>
+<p>Er validiert bewusst nicht, ob zum Beispiel <code>PaymentSucceeded</code> fachlich nach <code>ReservationCreated</code> kommen muss. Diese Interpretation gehört in Admin-Auswertung oder Tests, nicht in den Audit-Service.</p>
+<h2 id="stream-fuer-admin-dashboard"><a class="anchor-link" href="#stream-fuer-admin-dashboard" aria-label="Abschnitt verlinken">#</a>Stream für Admin Dashboard</h2>
+<p><code>GET /v1/audit/stream</code> liefert neue Snapshots in Echtzeit.</p>
+<p>SSE-Beispiel:</p>
+<pre class="code-block language-text"><code>event: audit.snapshot
+id: evt-123
+data: {&quot;correlationId&quot;:&quot;ord-2026-0001&quot;,&quot;eventType&quot;:&quot;PaymentSucceeded&quot;}</code></pre>
+<p>Empfohlenes Verhalten:</p>
+<ul><li>Client kann über <code>Last-Event-ID</code> reconnecten.</li><li>Stream kann nach <code>correlationId</code> gefiltert werden.</li><li>Heartbeats verhindern, dass Proxies die Verbindung schließen.</li><li>Admin Dashboard aktualisiert Timeline und Statuschips live.</li></ul>
+<h2 id="lesemodelle"><a class="anchor-link" href="#lesemodelle" aria-label="Abschnitt verlinken">#</a>Lesemodelle</h2>
+<p>Der Audit-Service kann einfache Read-Model-Aufbereitung anbieten, ohne Business-Entscheidungen zu treffen.</p>
+<h3 id="timeline-pro-bestellung"><a class="anchor-link" href="#timeline-pro-bestellung" aria-label="Abschnitt verlinken">#</a>Timeline pro Bestellung</h3>
+<p>Antwort:</p>
+<pre class="code-block language-json"><code>{
+  &quot;correlationId&quot;: &quot;ord-2026-0001&quot;,
+  &quot;snapshots&quot;: [
+    {
+      &quot;eventType&quot;: &quot;OrderCreated&quot;,
+      &quot;sourceService&quot;: &quot;shop-service&quot;,
+      &quot;timestamp&quot;: &quot;2026-05-29T12:00:00.000Z&quot;,
+      &quot;payload&quot;: {}
+    }
+  ]
+}</code></pre>
+<h3 id="aggregierte-uebersicht"><a class="anchor-link" href="#aggregierte-uebersicht" aria-label="Abschnitt verlinken">#</a>Aggregierte Übersicht</h3>
+<p>Mögliche Filter:</p>
+<ul><li>Zeitraum.</li><li>Eventtyp.</li><li>Service.</li><li>Endstatus.</li><li>Fehlercode im Payload.</li><li><code>correlationId</code>.</li></ul>
+<h2 id="relevante-eventtypen"><a class="anchor-link" href="#relevante-eventtypen" aria-label="Abschnitt verlinken">#</a>Relevante Eventtypen</h2>
+<div class="table-wrap"><table><thead><tr><th>Service</th><th>Eventtypen</th></tr></thead><tbody><tr><td>Shop</td><td><code>OrderCreated</code>, <code>OrderCompleted</code>, <code>OrderFailedOutOfStock</code>, <code>OrderRollbackCompleted</code>.</td></tr><tr><td>Warehouse</td><td><code>ReservationCreated</code>, <code>ReservationRejected</code>, <code>ReservationCancelled</code>, <code>StockBooked</code>.</td></tr><tr><td>Billing</td><td><code>PaymentInitiated</code>, <code>PaymentPending</code>, <code>PaymentSucceeded</code>, <code>PaymentFailed</code>, <code>PaymentRefunded</code>.</td></tr><tr><td>Invoice</td><td><code>InvoiceGenerated</code>, <code>InvoiceGenerationFailed</code>, <code>CircuitBreakerStateChanged</code>.</td></tr><tr><td>Simulation</td><td><code>FailureModeEnabled</code>, <code>ConcurrencyTestStarted</code>, <code>WebhookDelayChanged</code>.</td></tr></tbody></table></div>
+<h2 id="datenschutz-und-maskierung"><a class="anchor-link" href="#datenschutz-und-maskierung" aria-label="Abschnitt verlinken">#</a>Datenschutz und Maskierung</h2>
+<p>Auch in einem Simulationsprojekt sollten Audit-Payloads keine sensiblen Rohdaten enthalten.</p>
+<p>Maskiert oder ausgelassen werden:</p>
+<ul><li>Passwörter.</li><li>Tokens.</li><li>Vollständige Zahlungsdaten.</li><li>Authorization Header.</li><li>Interne Secrets.</li></ul>
+<h2 id="betriebliches-verhalten-bei-ausfall"><a class="anchor-link" href="#betriebliches-verhalten-bei-ausfall" aria-label="Abschnitt verlinken">#</a>Betriebliches Verhalten bei Ausfall</h2>
+<p>Der Audit-Service darf den Bestellprozess nicht dauerhaft blockieren. Wenn Audit temporär nicht erreichbar ist, sollen Services Events retrybar puffern oder über RabbitMQ zustellen. Für die Demo ist wichtig, diesen Kompromiss zu erklären: Audit ist für Nachvollziehbarkeit kritisch, aber es darf nicht zu inkonsistenten fachlichen Rollbacks führen.</p>
+<h2 id="abnahmekriterien"><a class="anchor-link" href="#abnahmekriterien" aria-label="Abschnitt verlinken">#</a>Abnahmekriterien</h2>
+<ul><li>Jeder Happy-Path-Schritt erzeugt mindestens einen Snapshot.</li><li>Jeder Kompensationsschritt erzeugt einen eigenen Snapshot.</li><li><code>GET /v1/audit/orders/{correlationId}</code> zeigt die Timeline vollständig und sortiert.</li><li>Der Stream aktualisiert das Admin Dashboard ohne Reload.</li><li>Es existieren keine Update- oder Delete-Pfade für Snapshots.</li></ul>
+        </article>
+      </div>
+
+      <nav class="doc-pagination" aria-label="Kapitel wechseln">
+        <a class="button ghost" href="05_service_billing_invoice.html">Vorheriges Kapitel</a>
+        <a class="button" href="../../index.html#kapitel">Alle Kapitel</a>
+        <a class="button primary" href="../architektur/07_saga_transaktionen_konsistenz.html">Nächstes Kapitel</a>
+      </nav>
+    </main>
+  </body>
+</html>

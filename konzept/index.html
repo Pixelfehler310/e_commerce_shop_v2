@@ -38,9 +38,10 @@
             Warehouse-Konsistenz, Payment-Simulation, Audit, Frontends, Observability und Deployment.
           </p>
           <div class="hero-actions" aria-label="Schnellzugriffe">
-            <a class="button primary" href="00_quickstart_und_leseweg.md">Leseweg starten</a>
-            <a class="button" href="07_saga_transaktionen_konsistenz.md">Saga ansehen</a>
-            <a class="button" href="12_tests_abnahme_demo.md">Demo-Tests öffnen</a>
+            <a class="button primary" href="pages/grundlagen/00_quickstart_und_leseweg.html">Leseweg starten</a>
+            <a class="button" href="pages/grundlagen/01a_anforderungsdokument.html">Anforderungen öffnen</a>
+            <a class="button" href="pages/architektur/07_saga_transaktionen_konsistenz.html">Saga ansehen</a>
+            <a class="button" href="pages/qualitaet/12_tests_abnahme_demo.html">Demo-Tests öffnen</a>
           </div>
         </div>
         <dl class="facts-grid" aria-label="Projektkennzahlen">
@@ -85,27 +86,27 @@
         </div>
 
         <div class="architecture-map" aria-label="Architekturkarte">
-          <a class="node frontend" href="09_frontends_simulationssuite.md">
+          <a class="node frontend" href="pages/frontends/09_frontends_simulationssuite.html">
             <strong>Frontends</strong>
             <span>Customer, Admin, WMS, Simulation</span>
           </a>
-          <a class="node gateway" href="03_service_shop.md">
+          <a class="node gateway" href="pages/services/03_service_shop.html">
             <strong>Shop-Service</strong>
             <span>Gateway, IAM, Warenkorb, Saga</span>
           </a>
-          <a class="node service" href="04_service_warehouse.md">
+          <a class="node service" href="pages/services/04_service_warehouse.html">
             <strong>Warehouse</strong>
             <span>Bestand, Reservierung, Locking</span>
           </a>
-          <a class="node service" href="05_service_billing_invoice.md">
+          <a class="node service" href="pages/services/05_service_billing_invoice.html">
             <strong>Billing</strong>
             <span>Payment-Fassade, Webhooks</span>
           </a>
-          <a class="node async" href="05_service_billing_invoice.md#invoice-service-rolle-im-gesamtsystem">
+          <a class="node async" href="pages/services/05_service_billing_invoice.html#invoice-service-rolle-im-gesamtsystem">
             <strong>Invoice</strong>
             <span>PDF nach PaymentSucceeded</span>
           </a>
-          <a class="node async" href="06_audit_service.md">
+          <a class="node async" href="pages/services/06_audit_service.html">
             <strong>Audit</strong>
             <span>Append-only Snapshots</span>
           </a>
@@ -129,92 +130,98 @@
           </label>
         </div>
 
-        <p id="filterStatus" class="filter-status" aria-live="polite">14 Kapitel sichtbar</p>
+        <p id="filterStatus" class="filter-status" aria-live="polite">15 Kapitel sichtbar</p>
 
         <div class="chapter-grid" id="chapterGrid">
           <article class="doc-card" data-tags="quickstart leseweg einstieg orientierung">
             <span class="doc-number">00</span>
             <h3>Quickstart und Leseweg</h3>
             <p>Orientierung, Zielbild, Grundprinzipien und empfohlene Lesereihenfolge.</p>
-            <a href="00_quickstart_und_leseweg.md">Kapitel öffnen</a>
+            <a href="pages/grundlagen/00_quickstart_und_leseweg.html">Kapitel öffnen</a>
           </article>
           <article class="doc-card" data-tags="anforderungen ziele scope rollen abnahme">
             <span class="doc-number">01</span>
             <h3>Anforderungen, Ziele und Scope</h3>
             <p>Muss-, Soll- und Bonusanforderungen, Rollen, Qualitätsattribute und Systemabnahme.</p>
-            <a href="01_anforderungen_ziele_scope.md">Kapitel öffnen</a>
+            <a href="pages/grundlagen/01_anforderungen_ziele_scope.html">Kapitel öffnen</a>
+          </article>
+          <article class="doc-card" data-tags="requirements anforderungsdokument funktionale nichtfunktionale subsysteme rollen schnittstellen abnahme matrix">
+            <span class="doc-number">REQ</span>
+            <h3>Anforderungsdokument</h3>
+            <p>Prüfbare System-, Subsystem-, Qualitäts-, Schnittstellen-, Betriebs- und Abnahmeanforderungen.</p>
+            <a href="pages/grundlagen/01a_anforderungsdokument.html">Kapitel öffnen</a>
           </article>
           <article class="doc-card" data-tags="systemarchitektur kommunikation rest rabbitmq datenhoheit">
             <span class="doc-number">02</span>
             <h3>Systemarchitektur und Kommunikation</h3>
             <p>Service-Landkarte, synchrone und asynchrone Kommunikation, Header und Datenhoheit.</p>
-            <a href="02_systemarchitektur_kommunikation.md">Kapitel öffnen</a>
+            <a href="pages/architektur/02_systemarchitektur_kommunikation.html">Kapitel öffnen</a>
           </article>
           <article class="doc-card" data-tags="shop gateway iam warenkorb order saga orchestrator">
             <span class="doc-number">03</span>
             <h3>Shop-Service</h3>
             <p>Gateway, Auth, Produktkatalog, Warenkorb, Order-Statusmodell und Saga-Orchestrierung.</p>
-            <a href="03_service_shop.md">Kapitel öffnen</a>
+            <a href="pages/services/03_service_shop.html">Kapitel öffnen</a>
           </article>
           <article class="doc-card" data-tags="warehouse lager bestand reservierung locking concurrency">
             <span class="doc-number">04</span>
             <h3>Warehouse-Service</h3>
             <p>Bestände, Reservierungen, Buchungen, Wareneingang und pessimistische PostgreSQL-Sperren.</p>
-            <a href="04_service_warehouse.md">Kapitel öffnen</a>
+            <a href="pages/services/04_service_warehouse.html">Kapitel öffnen</a>
           </article>
           <article class="doc-card" data-tags="billing payment invoice webhook refund fassade">
             <span class="doc-number">05</span>
             <h3>Billing und Invoice</h3>
             <p>Payment-Fassade, Provider-Stubs, Webhooks, Refunds und asynchrone PDF-Rechnungen.</p>
-            <a href="05_service_billing_invoice.md">Kapitel öffnen</a>
+            <a href="pages/services/05_service_billing_invoice.html">Kapitel öffnen</a>
           </article>
           <article class="doc-card" data-tags="audit snapshots event store sse timeline">
             <span class="doc-number">06</span>
             <h3>Audit-Service</h3>
             <p>Append-only Snapshots, Timeline-Endpunkte, SSE-Stream, Indizes und Maskierung.</p>
-            <a href="06_audit_service.md">Kapitel öffnen</a>
+            <a href="pages/services/06_audit_service.html">Kapitel öffnen</a>
           </article>
           <article class="doc-card" data-tags="saga transaktionen konsistenz kompensation happy path">
             <span class="doc-number">07</span>
             <h3>Saga, Transaktionen und Konsistenz</h3>
             <p>Happy Path, Fehlerpfade, Kompensationsmatrix, Statusmaschine und Invarianten.</p>
-            <a href="07_saga_transaktionen_konsistenz.md">Kapitel öffnen</a>
+            <a href="pages/architektur/07_saga_transaktionen_konsistenz.html">Kapitel öffnen</a>
           </article>
           <article class="doc-card" data-tags="idempotenz resilienz security redis circuit breaker jwt">
             <span class="doc-number">08</span>
             <h3>Idempotenz, Resilienz und Security</h3>
             <p>Redis-Keying, Retry-Policies, Circuit Breaker, JWT, Guards, Secrets und Problem Details.</p>
-            <a href="08_idempotenz_resilienz_security.md">Kapitel öffnen</a>
+            <a href="pages/qualitaet/08_idempotenz_resilienz_security.html">Kapitel öffnen</a>
           </article>
           <article class="doc-card" data-tags="frontend simulation customer admin warehouse wms demo">
             <span class="doc-number">09</span>
             <h3>Frontends und Simulationssuite</h3>
             <p>Customer Storefront, Admin Dashboard, WMS, Simulation Panel und Live-Demo-Workflows.</p>
-            <a href="09_frontends_simulationssuite.md">Kapitel öffnen</a>
+            <a href="pages/frontends/09_frontends_simulationssuite.html">Kapitel öffnen</a>
           </article>
           <article class="doc-card" data-tags="observability logging tracing grafana loki correlation">
             <span class="doc-number">10</span>
             <h3>Observability, Logging und Tracing</h3>
             <p>JSON-Logs, correlationId, Loki/Grafana, Metriken, LogQL und Audit-Zusammenspiel.</p>
-            <a href="10_observability_logging_tracing.md">Kapitel öffnen</a>
+            <a href="pages/qualitaet/10_observability_logging_tracing.html">Kapitel öffnen</a>
           </article>
           <article class="doc-card" data-tags="infrastruktur deployment docker compose repository env">
             <span class="doc-number">11</span>
             <h3>Infrastruktur, Deployment und Repository</h3>
             <p>Docker Compose, Netzwerke, Ports, Umgebungsvariablen, Migrationen und ADRs.</p>
-            <a href="11_infrastruktur_deployment_repo.md">Kapitel öffnen</a>
+            <a href="pages/betrieb/11_infrastruktur_deployment_repo.html">Kapitel öffnen</a>
           </article>
           <article class="doc-card" data-tags="tests abnahme demo e2e contract concurrency">
             <span class="doc-number">12</span>
             <h3>Tests, Abnahme und Demo</h3>
             <p>Testpyramide, E2E-Szenarien, Contract Tests, Demo-Skript und Abnahmecheckliste.</p>
-            <a href="12_tests_abnahme_demo.md">Kapitel öffnen</a>
+            <a href="pages/qualitaet/12_tests_abnahme_demo.html">Kapitel öffnen</a>
           </article>
           <article class="doc-card" data-tags="roadmap umsetzungsplan meilensteine risiko priorisierung">
             <span class="doc-number">13</span>
             <h3>Umsetzungsplan und Roadmap</h3>
             <p>Phasen, Meilensteine, kritische Pfade, Risiken, Definition of Done und nächste Schritte.</p>
-            <a href="13_umsetzungsplan_roadmap.md">Kapitel öffnen</a>
+            <a href="pages/planung/13_umsetzungsplan_roadmap.html">Kapitel öffnen</a>
           </article>
         </div>
       </section>
@@ -226,11 +233,11 @@
           <p>Die Saga ist das Zentrum der Architektur. Jeder Schritt erzeugt Status, Logs und Audit-Snapshots.</p>
         </div>
         <ol class="timeline">
-          <li><a href="03_service_shop.md">Order wird im Shop-Service angelegt</a></li>
-          <li><a href="04_service_warehouse.md">Warehouse reserviert Bestand mit Datenbanksperre</a></li>
-          <li><a href="05_service_billing_invoice.md">Billing führt Payment über Fassade aus</a></li>
-          <li><a href="05_service_billing_invoice.md#invoice-service-rolle-im-gesamtsystem">Invoice erzeugt asynchron eine PDF-Rechnung</a></li>
-          <li><a href="07_saga_transaktionen_konsistenz.md">Warehouse bucht final aus, Shop schließt Order ab</a></li>
+          <li><a href="pages/services/03_service_shop.html">Order wird im Shop-Service angelegt</a></li>
+          <li><a href="pages/services/04_service_warehouse.html">Warehouse reserviert Bestand mit Datenbanksperre</a></li>
+          <li><a href="pages/services/05_service_billing_invoice.html">Billing führt Payment über Fassade aus</a></li>
+          <li><a href="pages/services/05_service_billing_invoice.html#invoice-service-rolle-im-gesamtsystem">Invoice erzeugt asynchron eine PDF-Rechnung</a></li>
+          <li><a href="pages/architektur/07_saga_transaktionen_konsistenz.html">Warehouse bucht final aus, Shop schließt Order ab</a></li>
         </ol>
         <div class="process-panel">
           <h3>Kompensationen</h3>
@@ -250,19 +257,19 @@
           <p>Die Szenarien sind so ausgelegt, dass Architekturentscheidungen live sichtbar werden.</p>
         </div>
         <div class="scenario-grid">
-          <a href="12_tests_abnahme_demo.md#szenario-1-happy-path">
+          <a href="pages/qualitaet/12_tests_abnahme_demo.html#szenario-1-happy-path">
             <strong>Happy Path</strong>
             <span>Bestellung, Zahlung, Rechnung, Ausbuchung.</span>
           </a>
-          <a href="12_tests_abnahme_demo.md#szenario-2-payment-abgelehnt">
+          <a href="pages/qualitaet/12_tests_abnahme_demo.html#szenario-2-payment-abgelehnt">
             <strong>Payment abgelehnt</strong>
             <span>Reservierung wird kompensiert.</span>
           </a>
-          <a href="12_tests_abnahme_demo.md#szenario-4-warehouse-booking-schlägt-fehl">
+          <a href="pages/qualitaet/12_tests_abnahme_demo.html#szenario-4-warehouse-booking-schlaegt-fehl">
             <strong>Booking-Fehler</strong>
             <span>Refund nach erfolgreicher Zahlung.</span>
           </a>
-          <a href="12_tests_abnahme_demo.md#szenario-7-concurrency">
+          <a href="pages/qualitaet/12_tests_abnahme_demo.html#szenario-7-concurrency">
             <strong>Concurrency</strong>
             <span>Zwei parallele Käufe, kein Überverkauf.</span>
           </a>
@@ -276,15 +283,15 @@
           <p>Der Plan priorisiert zuerst den lauffähigen Kern und danach Sichtbarkeit, Simulation und Feinschliff.</p>
         </div>
         <div class="roadmap-list">
-          <a href="13_umsetzungsplan_roadmap.md#phase-0-projektgrundlage"><span>0</span>Projektgrundlage</a>
-          <a href="13_umsetzungsplan_roadmap.md#phase-1-shop-grundfunktionen"><span>1</span>Shop-Grundfunktionen</a>
-          <a href="13_umsetzungsplan_roadmap.md#phase-2-warehouse-service"><span>2</span>Warehouse</a>
-          <a href="13_umsetzungsplan_roadmap.md#phase-3-billing-und-payment-fassade"><span>3</span>Billing</a>
-          <a href="13_umsetzungsplan_roadmap.md#phase-4-saga-ende-zu-ende"><span>4</span>Saga E2E</a>
-          <a href="13_umsetzungsplan_roadmap.md#phase-5-audit-service"><span>5</span>Audit</a>
-          <a href="13_umsetzungsplan_roadmap.md#phase-6-invoice-service-und-resilienz"><span>6</span>Invoice</a>
-          <a href="13_umsetzungsplan_roadmap.md#phase-7-frontends"><span>7</span>Frontends</a>
-          <a href="13_umsetzungsplan_roadmap.md#phase-8-observability-und-demo-finish"><span>8</span>Demo-Finish</a>
+          <a href="pages/planung/13_umsetzungsplan_roadmap.html#phase-0-projektgrundlage"><span>0</span>Projektgrundlage</a>
+          <a href="pages/planung/13_umsetzungsplan_roadmap.html#phase-1-shop-grundfunktionen"><span>1</span>Shop-Grundfunktionen</a>
+          <a href="pages/planung/13_umsetzungsplan_roadmap.html#phase-2-warehouse-service"><span>2</span>Warehouse</a>
+          <a href="pages/planung/13_umsetzungsplan_roadmap.html#phase-3-billing-und-payment-fassade"><span>3</span>Billing</a>
+          <a href="pages/planung/13_umsetzungsplan_roadmap.html#phase-4-saga-ende-zu-ende"><span>4</span>Saga E2E</a>
+          <a href="pages/planung/13_umsetzungsplan_roadmap.html#phase-5-audit-service"><span>5</span>Audit</a>
+          <a href="pages/planung/13_umsetzungsplan_roadmap.html#phase-6-invoice-service-und-resilienz"><span>6</span>Invoice</a>
+          <a href="pages/planung/13_umsetzungsplan_roadmap.html#phase-7-frontends"><span>7</span>Frontends</a>
+          <a href="pages/planung/13_umsetzungsplan_roadmap.html#phase-8-observability-und-demo-finish"><span>8</span>Demo-Finish</a>
         </div>
       </section>
     </main>
