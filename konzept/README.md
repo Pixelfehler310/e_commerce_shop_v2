@@ -12,17 +12,18 @@ Der Einstieg erfolgt über die klickbare HTML-Übersicht. Die Markdown-Dateien b
 2. [Anforderungen, Ziele und Scope](pages/grundlagen/01_anforderungen_ziele_scope.html) - fachliche und technische Anforderungen.
 3. [Anforderungsdokument](pages/grundlagen/01a_anforderungsdokument.html) - prüfbare funktionale, nichtfunktionale, subsystembezogene und betriebliche Anforderungen.
 4. [Systemarchitektur und Kommunikation](pages/architektur/02_systemarchitektur_kommunikation.html) - Systemlandschaft, Kommunikationsmuster und Verantwortlichkeiten.
-5. [Shop-Service](pages/services/03_service_shop.html) - Shop-Service als Gateway, IAM, Katalog, Warenkorb und Saga-Orchestrator.
-6. [Warehouse-Service](pages/services/04_service_warehouse.html) - Warehouse-Service, Bestand, Reservierung und Concurrency Control.
-7. [Billing und Invoice](pages/services/05_service_billing_invoice.html) - Payment-Fassade, Zahlungszustände, Webhooks und Rechnungen.
-8. [Audit-Service](pages/services/06_audit_service.html) - Audit-Service, Snapshots, Event-Store-Light und Admin-Lesemodelle.
-9. [Saga, Transaktionen und Konsistenz](pages/architektur/07_saga_transaktionen_konsistenz.html) - Orchestrierte Saga, Happy Path, Fehlerpfade und Kompensation.
-10. [Idempotenz, Resilienz und Security](pages/qualitaet/08_idempotenz_resilienz_security.html) - Idempotenz, Circuit Breaker, Retry, Auth und Guards.
-11. [Frontends und Simulationssuite](pages/frontends/09_frontends_simulationssuite.html) - Customer View, Admin View, WMS und Demo-Control-Panel.
-12. [Observability, Logging und Tracing](pages/qualitaet/10_observability_logging_tracing.html) - JSON-Logging, Correlation IDs, Loki/Grafana und Dashboards.
-13. [Infrastruktur, Deployment und Repository](pages/betrieb/11_infrastruktur_deployment_repo.html) - Docker Compose, Umgebungsvariablen und Repository-Struktur.
-14. [Tests, Abnahme und Demo](pages/qualitaet/12_tests_abnahme_demo.html) - Teststrategie, Abnahmekriterien und Präsentationsszenarien.
-15. [Umsetzungsplan und Roadmap](pages/planung/13_umsetzungsplan_roadmap.html) - Phasenplan, Meilensteine, Risiken und Priorisierung.
+5. [Contracts und Schnittstellenkatalog](pages/architektur/02a_contracts_und_schnittstellen.html) - zentrale Übersicht über REST-, Event-, Audit- und Betriebs-Contracts mit technischen Ankern.
+6. [Shop-Service](pages/services/03_service_shop.html) - Shop-Service als Gateway, IAM, Katalog, Warenkorb und Saga-Orchestrator.
+7. [Warehouse-Service](pages/services/04_service_warehouse.html) - Warehouse-Service, Bestand, Reservierung und Concurrency Control.
+8. [Billing und Invoice](pages/services/05_service_billing_invoice.html) - Payment-Fassade, Zahlungszustände, Webhooks und Rechnungen.
+9. [Audit-Service](pages/services/06_audit_service.html) - Audit-Service, Snapshots, Event-Store-Light und Admin-Lesemodelle.
+10. [Saga, Transaktionen und Konsistenz](pages/architektur/07_saga_transaktionen_konsistenz.html) - Orchestrierte Saga, Happy Path, Fehlerpfade und Kompensation.
+11. [Idempotenz, Resilienz und Security](pages/qualitaet/08_idempotenz_resilienz_security.html) - Idempotenz, Circuit Breaker, Retry, Auth und Guards.
+12. [Frontends und Simulationssuite](pages/frontends/09_frontends_simulationssuite.html) - Customer View, Admin View, WMS und Demo-Control-Panel.
+13. [Observability, Logging und Tracing](pages/qualitaet/10_observability_logging_tracing.html) - JSON-Logging, Correlation IDs, Loki/Grafana und Dashboards.
+14. [Infrastruktur, Deployment und Repository](pages/betrieb/11_infrastruktur_deployment_repo.html) - Docker Compose, Umgebungsvariablen und Repository-Struktur.
+15. [Tests, Abnahme und Demo](pages/qualitaet/12_tests_abnahme_demo.html) - Teststrategie, Abnahmekriterien und Präsentationsszenarien.
+16. [Umsetzungsplan und Roadmap](pages/planung/13_umsetzungsplan_roadmap.html) - Phasenplan, Meilensteine, Risiken und Priorisierung.
 
 ## HTML neu generieren
 

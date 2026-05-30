@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Contracts und Schnittstellenkatalog - Distributed E-Commerce Core</title>
+    <link rel="stylesheet" href="../../assets/styles.css" />
+  </head>
+  <body class="doc-page">
+    <a class="skip-link" href="#inhalt">Zum Inhalt springen</a>
+
+    <aside class="sidebar doc-sidebar" aria-label="Konzeptnavigation">
+      <a class="brand brand-link" href="../../index.html">
+        <span class="brand-mark">DEC</span>
+        <span>
+          <strong>Distributed E-Commerce Core</strong>
+          <small>HTML-Konzept</small>
+        </span>
+      </a>
+      <nav class="chapter-nav" aria-label="Kapitel">
+        <div class="chapter-nav-group"><p>Grundlagen</p><a href="../grundlagen/00_quickstart_und_leseweg.html"><span>00</span>Quickstart und Leseweg</a><a href="../grundlagen/01_anforderungen_ziele_scope.html"><span>01</span>Anforderungen, Ziele und Scope</a><a href="../grundlagen/01a_anforderungsdokument.html"><span>REQ</span>Anforderungsdokument</a></div><div class="chapter-nav-group"><p>Architektur</p><a href="02_systemarchitektur_kommunikation.html"><span>02</span>Systemarchitektur und Kommunikation</a><a href="02a_contracts_und_schnittstellen.html" aria-current="page"><span>02a</span>Contracts und Schnittstellenkatalog</a><a href="07_saga_transaktionen_konsistenz.html"><span>07</span>Saga, Transaktionen und Konsistenz</a></div><div class="chapter-nav-group"><p>Services</p><a href="../services/03_service_shop.html"><span>03</span>Shop-Service</a><a href="../services/04_service_warehouse.html"><span>04</span>Warehouse-Service</a><a href="../services/05_service_billing_invoice.html"><span>05</span>Billing und Invoice</a><a href="../services/06_audit_service.html"><span>06</span>Audit-Service</a></div><div class="chapter-nav-group"><p>Qualität</p><a href="../qualitaet/08_idempotenz_resilienz_security.html"><span>08</span>Idempotenz, Resilienz und Security</a><a href="../qualitaet/10_observability_logging_tracing.html"><span>10</span>Observability, Logging und Tracing</a><a href="../qualitaet/12_tests_abnahme_demo.html"><span>12</span>Tests, Abnahme und Demo</a></div><div class="chapter-nav-group"><p>Frontends</p><a href="../frontends/09_frontends_simulationssuite.html"><span>09</span>Frontends und Simulationssuite</a></div><div class="chapter-nav-group"><p>Betrieb</p><a href="../betrieb/11_infrastruktur_deployment_repo.html"><span>11</span>Infrastruktur, Deployment und Repository</a></div><div class="chapter-nav-group"><p>Planung</p><a href="../planung/13_umsetzungsplan_roadmap.html"><span>13</span>Umsetzungsplan und Roadmap</a></div>
+      </nav>
+    <a class="sidebar-action" href="../../index.html">Zur Gesamtübersicht</a>
+    </aside>
+
+    <main id="inhalt" class="page-shell doc-shell">
+      <header class="doc-hero">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <a href="../../index.html">Übersicht</a>
+          <span>Architektur</span>
+          <span>Kapitel 02a</span>
+        </nav>
+        <p class="eyebrow">Kapitel 02a</p>
+        <h1>Contracts und Schnittstellenkatalog</h1>
+        <p class="lead">Zentrale Uebersicht ueber REST-, Event-, Audit- und Betriebs-Contracts mit technischen Ankern fuer spaetere Nachschaerfung.</p>
+        <div class="doc-actions">
+          <a class="button ghost" href="02_systemarchitektur_kommunikation.html">Vorheriges Kapitel</a>
+          <a class="button" href="../../02a_contracts_und_schnittstellen.md">Markdown-Quelle</a>
+          <a class="button primary" href="../services/03_service_shop.html">Nächstes Kapitel</a>
+        </div>
+      </header>
+
+      
+
+      <div class="doc-layout">
+        <aside class="toc-card" aria-label="Inhaltsverzeichnis"><strong>Inhalt</strong><a class="toc-level-2" href="#zweck-dieses-kapitels">Zweck dieses Kapitels</a><a class="toc-level-2" href="#pflege-regel-bei-contract-aenderungen">Pflege-Regel bei Contract-Aenderungen</a><a class="toc-level-2" href="#contract-landkarte">Contract-Landkarte</a><a class="toc-level-2" href="#oeffentliche-rest-contracts-des-shop-service">Oeffentliche REST-Contracts des Shop-Service</a><a class="toc-level-3" href="#authentisierung-und-benutzerkontext">Authentisierung und Benutzerkontext</a><a class="toc-level-3" href="#katalog-warenkorb-und-bestellung">Katalog, Warenkorb und Bestellung</a><a class="toc-level-3" href="#admin-demo-und-betriebszugriff">Admin, Demo und Betriebszugriff</a><a class="toc-level-2" href="#interne-rest-contracts">Interne REST-Contracts</a><a class="toc-level-3" href="#shop-service-zu-warehouse-service">Shop-Service zu Warehouse-Service</a><a class="toc-level-3" href="#shop-service-zu-billing-service">Shop-Service zu Billing-Service</a><a class="toc-level-3" href="#services-zu-audit-service">Services zu Audit-Service</a><a class="toc-level-2" href="#asynchrone-event-contracts">Asynchrone Event-Contracts</a><a class="toc-level-2" href="#offene-stellen-fuer-die-weitere-bearbeitung">Offene Stellen fuer die weitere Bearbeitung</a><a class="toc-level-2" href="#weiterfuehrende-detailkapitel">Weiterfuehrende Detailkapitel</a></aside>
+        <article class="article-content">
+          <h1 id="contracts-und-schnittstellenkatalog"><a class="anchor-link" href="#contracts-und-schnittstellenkatalog" aria-label="Abschnitt verlinken">#</a>Contracts und Schnittstellenkatalog</h1>
+<h2 id="zweck-dieses-kapitels"><a class="anchor-link" href="#zweck-dieses-kapitels" aria-label="Abschnitt verlinken">#</a>Zweck dieses Kapitels</h2>
+<p>Dieses Kapitel buendelt die aktuell definierten Contracts an einer Stelle. Es soll nicht die service-spezifischen Kapitel ersetzen, sondern die Stellen zusammenziehen, die spaeter am haeufigsten nachgeschaerft werden muessen: Routen, Header, Payload-Zuschnitte, Event-Namen und technische Anker im Code.</p>
+<p>Wichtig fuer den Ist-Stand: Die meisten Business-Endpunkte sind im Code bereits als Controller- oder Event-Stub angelegt, fuehren aber technisch noch <code>request: unknown</code> und werfen <code>NotImplementedException(&quot;Contract stub only&quot;)</code>. Genau deshalb ist diese Seite der zentrale Editierpunkt, solange DTOs, Interfaces und Contract-Tests noch nachgezogen werden.</p>
+<h2 id="pflege-regel-bei-contract-aenderungen"><a class="anchor-link" href="#pflege-regel-bei-contract-aenderungen" aria-label="Abschnitt verlinken">#</a>Pflege-Regel bei Contract-Aenderungen</h2>
+<p>Wenn sich ein Contract aendert, sollten immer dieselben vier Ebenen gemeinsam angepasst werden:</p>
+<ol><li>Technischer Anker im Controller oder Event-Consumer.</li><li>Dieses Kapitel als zentrale Uebersicht.</li><li>Das betroffene Service-Kapitel, zum Beispiel <a href="../services/03_service_shop.html">Shop-Service</a> oder <a href="../services/05_service_billing_invoice.html">Billing und Invoice</a>.</li><li>Contract-Tests, OpenAPI/AsyncAPI-Spezifikation und Demo-/Abnahmeszenarien.</li></ol>
+<p>Die Health-Endpunkte sind davon ausgenommen. Sie sind bereits technisch implementiert und dienen eher dem Betrieb als dem fachlichen Contract.</p>
+<h2 id="contract-landkarte"><a class="anchor-link" href="#contract-landkarte" aria-label="Abschnitt verlinken">#</a>Contract-Landkarte</h2>
+<div class="table-wrap"><table><thead><tr><th>Contract-Flaeche</th><th>Producer/Owner</th><th>Consumer</th><th>Technischer Anker im Code</th><th>Ist-Stand</th></tr></thead><tbody><tr><td>Oeffentliche Shop-REST-API</td><td>Shop-Service</td><td>Frontends, Admin, Demo</td><td><code>shop-service/src/modules/auth/controllers/auth.controller.ts</code>, <code>.../products.controller.ts</code>, <code>.../basket.controller.ts</code>, <code>.../orders.controller.ts</code>, <code>.../admin.controller.ts</code>, <code>.../me.controller.ts</code></td><td>Routen stehen, Payload-Typisierung ist noch offen.</td></tr><tr><td>Interne Warehouse-REST-API</td><td>Warehouse-Service</td><td>Shop-Service, <code>LOGISTICS</code>, <code>ADMIN</code></td><td><code>warehouse-service/src/modules/products/controllers/warehouse-products.controller.ts</code>, <code>.../reservations.controller.ts</code>, <code>.../bookings.controller.ts</code>, <code>.../simulation.controller.ts</code></td><td>Routen stehen, fachliche Request-/Response-Schemas sind im Konzept beschrieben.</td></tr><tr><td>Interne Billing-REST-API</td><td>Billing-Service</td><td>Shop-Service, Payment-Stub, <code>ADMIN</code></td><td><code>billing-service/src/modules/charges/controllers/billing-charges.controller.ts</code>, <code>.../refunds.controller.ts</code>, <code>.../webhooks.controller.ts</code>, <code>.../simulation.controller.ts</code></td><td>Routen stehen, Charge-/Refund-/Webhook-Payloads sind teilweise bereits fachlich konkretisiert.</td></tr><tr><td>Audit REST und SSE</td><td>Audit-Service</td><td>Interne Services, Admin Dashboard</td><td><code>audit-service/src/modules/snapshots/controllers/audit-snapshots.controller.ts</code>, <code>.../orders.controller.ts</code>, <code>.../search.controller.ts</code>, <code>.../stream.controller.ts</code></td><td>Snapshot-Write, Search, Timeline und Stream sind als Contracts angelegt.</td></tr><tr><td>Async Event-Consumer</td><td>Invoice-Service, Audit-Service</td><td>Billing, Shop, Warehouse, Invoice</td><td><code>invoice-service/src/modules/events/controllers/invoice-events.controller.ts</code>, <code>audit-service/src/modules/events/controllers/audit-events.controller.ts</code></td><td>Event-Einstiegspunkte stehen, Event-Payloads muessen als versionierte Schemas gepflegt werden.</td></tr><tr><td>Health und Betriebs-Checks</td><td>Alle Services</td><td>Compose, Admin, Betrieb</td><td><code>*/src/common/health/health.controller.ts</code>, <code>shop-service/src/modules/admin/controllers/service-health.controller.ts</code></td><td>Technisch bereits implementiert.</td></tr></tbody></table></div>
+<h2 id="oeffentliche-rest-contracts-des-shop-service"><a class="anchor-link" href="#oeffentliche-rest-contracts-des-shop-service" aria-label="Abschnitt verlinken">#</a>Oeffentliche REST-Contracts des Shop-Service</h2>
+<p>Detailtiefe und fachliche Hintergruende stehen in <a href="../services/03_service_shop.html">Shop-Service</a>. Diese Tabelle ist der schnelle Einstieg fuer die konkrete API-Oberflaeche.</p>
+<h3 id="authentisierung-und-benutzerkontext"><a class="anchor-link" href="#authentisierung-und-benutzerkontext" aria-label="Abschnitt verlinken">#</a>Authentisierung und Benutzerkontext</h3>
+<div class="table-wrap"><table><thead><tr><th>Methode</th><th>Pfad</th><th>Kern-Request</th><th>Kern-Response</th><th>Besondere Regeln</th></tr></thead><tbody><tr><td><code>POST</code></td><td><code>/v1/auth/register</code></td><td><code>email</code>, <code>password</code>, <code>displayName</code></td><td>angelegter Nutzer oder leere Success-Response</td><td>Standardrolle <code>CUSTOMER</code>.</td></tr><tr><td><code>POST</code></td><td><code>/v1/auth/login</code></td><td>Credentials</td><td><code>accessToken</code>, <code>tokenType</code>, <code>expiresIn</code>, <code>user</code></td><td>JWT ist Basis fuer alle geschuetzten Endpunkte.</td></tr><tr><td><code>GET</code></td><td><code>/v1/me</code></td><td>kein Body</td><td>aktueller Benutzerkontext</td><td>Dient Frontends als Session-/Profil-Read-Modell.</td></tr></tbody></table></div>
+<h3 id="katalog-warenkorb-und-bestellung"><a class="anchor-link" href="#katalog-warenkorb-und-bestellung" aria-label="Abschnitt verlinken">#</a>Katalog, Warenkorb und Bestellung</h3>
+<div class="table-wrap"><table><thead><tr><th>Methode</th><th>Pfad</th><th>Kern-Request</th><th>Kern-Response</th><th>Besondere Regeln</th></tr></thead><tbody><tr><td><code>GET</code></td><td><code>/v1/products</code></td><td>Query fuer Paging/Filter</td><td>paginierte Produktliste</td><td>Customer sieht nur aktive Produkte, Admin optional alle.</td></tr><tr><td><code>GET</code></td><td><code>/v1/products/{productId}</code></td><td><code>productId</code> als Pfadparameter</td><td>Produktdetail</td><td>Produkt-ID ist Shop-weite Referenz und wird an Warehouse weitergereicht.</td></tr><tr><td><code>POST</code></td><td><code>/v1/products</code></td><td><code>name</code>, <code>description</code>, <code>priceGross</code>, <code>currency</code>, <code>sku</code>, <code>initialStock</code>, <code>active</code></td><td>angelegtes Produkt</td><td>Initialisiert synchron den Warehouse-Bestand.</td></tr><tr><td><code>PATCH</code></td><td><code>/v1/products/{productId}</code></td><td>partielle Produktaenderung</td><td>aktualisiertes Produkt</td><td>Aenderung betrifft nur Shop-Sicht, nicht vergangene Order-Snapshots.</td></tr><tr><td><code>GET</code></td><td><code>/v1/baskets</code></td><td>kein Body</td><td>aktiver Warenkorb</td><td>Basis fuer Checkout; Preise werden spaeter in die Order kopiert.</td></tr><tr><td><code>POST</code></td><td><code>/v1/baskets/items</code></td><td>mindestens <code>productId</code>, <code>quantity</code></td><td>aktualisierter Warenkorb oder Position</td><td>Fuegt hinzu oder erhoeht Menge.</td></tr><tr><td><code>PATCH</code></td><td><code>/v1/baskets/items/{productId}</code></td><td>mindestens <code>quantity</code></td><td>aktualisierte Position</td><td>Nur positive Ganzzahlen zulassen.</td></tr><tr><td><code>DELETE</code></td><td><code>/v1/baskets/items/{productId}</code></td><td>kein Body</td><td>fachlich idempotente Entfernen-Response</td><td>Wiederholtes Entfernen darf nicht fachlich eskalieren.</td></tr><tr><td><code>POST</code></td><td><code>/v1/orders</code></td><td>Checkout-Body noch nicht finalisiert; fachlich zwingend sind <code>X-Idempotency-Key</code> und optional <code>X-Correlation-Id</code></td><td>Order-Status oder gespeicherte Idempotenz-Antwort</td><td>Warenkorb ist die Bestellbasis, nicht ein frei zusammengesetzter Item-Body.</td></tr><tr><td><code>GET</code></td><td><code>/v1/orders</code></td><td>Query fuer Status, Paging, Rolle</td><td>eigene oder administrative Orderliste</td><td>CUSTOMER nur eigene Bestellungen.</td></tr><tr><td><code>GET</code></td><td><code>/v1/orders/{correlationId}</code></td><td><code>correlationId</code></td><td>Status, Prozess- und Referenzinformationen</td><td><code>correlationId</code> ist fachlicher Leitanker fuer Logs, Audit und Servicegrenzen.</td></tr></tbody></table></div>
+<p>Pflichtheader fuer den Checkout:</p>
+<pre class="code-block language-http"><code>Authorization: Bearer &lt;jwt&gt;
+X-Idempotency-Key: &lt;client-generated-key&gt;
+X-Correlation-Id: &lt;optional-client-correlation-id&gt;</code></pre>
+<h3 id="admin-demo-und-betriebszugriff"><a class="anchor-link" href="#admin-demo-und-betriebszugriff" aria-label="Abschnitt verlinken">#</a>Admin, Demo und Betriebszugriff</h3>
+<div class="table-wrap"><table><thead><tr><th>Methode</th><th>Pfad</th><th>Zweck</th><th>Contract-Hinweis</th></tr></thead><tbody><tr><td><code>GET</code></td><td><code>/v1/admin/orders</code></td><td>administrative Ordersuche</td><td>Muss Filter auf Status, Zeitraum und <code>correlationId</code> tragen koennen.</td></tr><tr><td><code>GET</code></td><td><code>/v1/admin/orders/{correlationId}/timeline</code></td><td>zusammengezogene Timeline fuer Admin</td><td>Kann Audit-Read-Model oder Shop-Proxy sein, aber die Antwort bleibt Admin-zentriert.</td></tr><tr><td><code>GET</code></td><td><code>/v1/admin/audit/stream</code></td><td>Live-Stream ins Dashboard</td><td>Transportiert SSE oder Proxy-SSE in den Admin-Kontext.</td></tr><tr><td><code>POST</code></td><td><code>/v1/admin/simulation/{scenario}</code></td><td>Demo-Szenarien triggern</td><td>Darf nur kontrollierte Fehlerpfade freischalten.</td></tr><tr><td><code>GET</code></td><td><code>/v1/admin/health/services</code></td><td>Uebersicht aller Service-Healthchecks</td><td>Technisch bereits implementiert; dient als betrieblicher Contract.</td></tr></tbody></table></div>
+<h2 id="interne-rest-contracts"><a class="anchor-link" href="#interne-rest-contracts" aria-label="Abschnitt verlinken">#</a>Interne REST-Contracts</h2>
+<h3 id="shop-service-zu-warehouse-service"><a class="anchor-link" href="#shop-service-zu-warehouse-service" aria-label="Abschnitt verlinken">#</a>Shop-Service zu Warehouse-Service</h3>
+<p>Detailtiefe und Invarianten stehen in <a href="../services/04_service_warehouse.html">Warehouse-Service</a>.</p>
+<div class="table-wrap"><table><thead><tr><th>Methode</th><th>Pfad</th><th>Zweck</th><th>Kernfelder</th><th>Regeln</th></tr></thead><tbody><tr><td><code>POST</code></td><td><code>/v1/warehouse/products</code></td><td>Bestand zu neuem Produkt anlegen</td><td><code>productId</code>, <code>sku</code>, <code>initialStock</code></td><td>Muss im Erfolgsfall genau einen Warehouse-Datensatz anlegen.</td></tr><tr><td><code>PATCH</code></td><td><code>/v1/warehouse/products/{productId}/stock</code></td><td>Wareneingang oder Korrektur</td><td><code>quantityDelta</code>, <code>reason</code>, <code>reference</code></td><td>Negative Deltas nur kontrolliert und nie unter <code>0</code>.</td></tr><tr><td><code>GET</code></td><td><code>/v1/warehouse/products/{productId}/stock</code></td><td>Bestandsansicht lesen</td><td><code>productId</code></td><td>Antwort muss freien, reservierten und gebuchten Bestand trennen.</td></tr><tr><td><code>POST</code></td><td><code>/v1/warehouse/reservations</code></td><td>Bestand pruefen und reservieren</td><td><code>correlationId</code>, <code>items[]</code> mit <code>productId</code>, <code>quantity</code></td><td>Idempotent pro <code>correlationId</code>; verwendet pessimistische Sperren.</td></tr><tr><td><code>DELETE</code></td><td><code>/v1/warehouse/reservations/{correlationId}</code></td><td>Reservierung stornieren</td><td><code>correlationId</code> im Pfad</td><td>Zweiter Storno darf Mengen nicht erneut freigeben.</td></tr><tr><td><code>POST</code></td><td><code>/v1/warehouse/bookings</code></td><td>Reservierte Ware final buchen</td><td>mindestens <code>correlationId</code> oder eindeutige Reservierungsreferenz</td><td>Nur fuer aktive Reservierungen; idempotent.</td></tr><tr><td><code>POST</code></td><td><code>/v1/warehouse/simulation/failure-mode</code></td><td>Fehler oder Delay setzen</td><td>Modus und Wirkungsdauer/Einmaligkeit</td><td>Ausschliesslich fuer <code>ADMIN</code> bzw. Demo-Kontext.</td></tr></tbody></table></div>
+<p>Kanonischer Reservierungs-Request:</p>
+<pre class="code-block language-json"><code>{
+  &quot;correlationId&quot;: &quot;ord-2026-0001&quot;,
+  &quot;items&quot;: [
+    { &quot;productId&quot;: &quot;prd-1&quot;, &quot;quantity&quot;: 1 },
+    { &quot;productId&quot;: &quot;prd-2&quot;, &quot;quantity&quot;: 2 }
+  ]
+}</code></pre>
+<p>Kanonischer Bestands-Adjust-Request:</p>
+<pre class="code-block language-json"><code>{
+  &quot;quantityDelta&quot;: 15,
+  &quot;reason&quot;: &quot;INBOUND_DELIVERY&quot;,
+  &quot;reference&quot;: &quot;DEL-2026-05-29-001&quot;
+}</code></pre>
+<h3 id="shop-service-zu-billing-service"><a class="anchor-link" href="#shop-service-zu-billing-service" aria-label="Abschnitt verlinken">#</a>Shop-Service zu Billing-Service</h3>
+<p>Detailtiefe steht in <a href="../services/05_service_billing_invoice.html">Billing und Invoice</a>.</p>
+<div class="table-wrap"><table><thead><tr><th>Methode</th><th>Pfad</th><th>Zweck</th><th>Kernfelder</th><th>Regeln</th></tr></thead><tbody><tr><td><code>POST</code></td><td><code>/v1/billing/charges</code></td><td>Zahlung starten</td><td><code>correlationId</code>, <code>amountGross</code>, <code>currency</code>, <code>customerId</code>, <code>paymentMethod</code></td><td>Ergebnis muss <code>SUCCEEDED</code>, <code>FAILED</code> oder <code>PENDING</code> kanonisch abbilden.</td></tr><tr><td><code>GET</code></td><td><code>/v1/billing/charges/{correlationId}</code></td><td>Payment-Status abfragen</td><td><code>correlationId</code></td><td>Wichtig fuer Pending-Fortsetzung und Admin-Read-Model.</td></tr><tr><td><code>POST</code></td><td><code>/v1/billing/refunds</code></td><td>Rueckerstattung ausloesen</td><td>mindestens <code>correlationId</code>, optional fachliche Begruendung</td><td>Nur nach erfolgreicher Zahlung; idempotent.</td></tr><tr><td><code>POST</code></td><td><code>/v1/billing/webhooks/{provider}</code></td><td>asynchrones Provider-Callback</td><td>provider-spezifische Felder</td><td>Provider-spezifisch im Eingang, intern auf Billing-Statusmodell mappen.</td></tr><tr><td><code>POST</code></td><td><code>/v1/billing/simulation/provider-mode</code></td><td>Demo-Modus setzen</td><td>Provider-/Mode-Konfiguration</td><td>Nur fuer <code>ADMIN</code>; bestimmt den naechsten Payment-Ausgang.</td></tr></tbody></table></div>
+<p>Kanonischer Charge-Request:</p>
+<pre class="code-block language-json"><code>{
+  &quot;correlationId&quot;: &quot;ord-2026-0001&quot;,
+  &quot;amountGross&quot;: 259.98,
+  &quot;currency&quot;: &quot;EUR&quot;,
+  &quot;customerId&quot;: &quot;usr-123&quot;,
+  &quot;paymentMethod&quot;: {
+    &quot;type&quot;: &quot;SIMULATED_CARD&quot;,
+    &quot;token&quot;: &quot;tok_demo_success&quot;
+  }
+}</code></pre>
+<p>Kanonische Charge-Response:</p>
+<pre class="code-block language-json"><code>{
+  &quot;correlationId&quot;: &quot;ord-2026-0001&quot;,
+  &quot;paymentId&quot;: &quot;pay-123&quot;,
+  &quot;provider&quot;: &quot;stripe-sim&quot;,
+  &quot;providerTransactionId&quot;: &quot;txn_abc&quot;,
+  &quot;status&quot;: &quot;SUCCEEDED&quot;
+}</code></pre>
+<p>Asynchroner Erfolgsfall ueber denselben Contract:</p>
+<pre class="code-block language-json"><code>{
+  &quot;correlationId&quot;: &quot;ord-2026-0001&quot;,
+  &quot;paymentId&quot;: &quot;pay-123&quot;,
+  &quot;provider&quot;: &quot;async-webhook-sim&quot;,
+  &quot;providerTransactionId&quot;: &quot;txn_async_abc&quot;,
+  &quot;status&quot;: &quot;PENDING&quot;
+}</code></pre>
+<h3 id="services-zu-audit-service"><a class="anchor-link" href="#services-zu-audit-service" aria-label="Abschnitt verlinken">#</a>Services zu Audit-Service</h3>
+<p>Detailtiefe steht in <a href="../services/06_audit_service.html">Audit-Service</a>.</p>
+<div class="table-wrap"><table><thead><tr><th>Methode</th><th>Pfad</th><th>Zweck</th><th>Kernfelder</th><th>Regeln</th></tr></thead><tbody><tr><td><code>POST</code></td><td><code>/v1/audit/snapshots</code></td><td>Snapshot anhaengen</td><td><code>correlationId</code>, <code>eventType</code>, <code>sourceService</code>, <code>timestamp</code>, <code>payload</code>, <code>metadata</code></td><td>Append-only; keine spaeteren Updates oder Deletes.</td></tr><tr><td><code>GET</code></td><td><code>/v1/audit/orders/{correlationId}</code></td><td>Timeline laden</td><td><code>correlationId</code></td><td>Chronologische Reihenfolge und vollstaendige Kette.</td></tr><tr><td><code>GET</code></td><td><code>/v1/audit/search</code></td><td>Snapshots filtern</td><td>Query zu Typ, Service, Zeitraum, Status</td><td>Read-Model fuer Admin und Debugging.</td></tr><tr><td><code>GET</code></td><td><code>/v1/audit/stream</code></td><td>Snapshots live streamen</td><td>Query z. B. fuer <code>correlationId</code></td><td>Liefert SSE mit Heartbeats und Reconnect-Faehigkeit.</td></tr></tbody></table></div>
+<p>Kanonisches Snapshot-Schema:</p>
+<pre class="code-block language-json"><code>{
+  &quot;id&quot;: &quot;evt-123&quot;,
+  &quot;correlationId&quot;: &quot;ord-2026-0001&quot;,
+  &quot;eventType&quot;: &quot;PaymentSucceeded&quot;,
+  &quot;sourceService&quot;: &quot;billing-service&quot;,
+  &quot;timestamp&quot;: &quot;2026-05-29T12:00:00.000Z&quot;,
+  &quot;previousEventId&quot;: &quot;evt-122&quot;,
+  &quot;payload&quot;: {
+    &quot;paymentId&quot;: &quot;pay-123&quot;,
+    &quot;provider&quot;: &quot;stripe-sim&quot;,
+    &quot;amountGross&quot;: 259.98,
+    &quot;currency&quot;: &quot;EUR&quot;
+  },
+  &quot;metadata&quot;: {
+    &quot;schemaVersion&quot;: 1,
+    &quot;traceId&quot;: &quot;trace-abc&quot;,
+    &quot;spanId&quot;: &quot;span-def&quot;
+  }
+}</code></pre>
+<p>SSE-Beispiel fuer den Stream:</p>
+<pre class="code-block language-text"><code>event: audit.snapshot
+id: evt-123
+data: {&quot;correlationId&quot;:&quot;ord-2026-0001&quot;,&quot;eventType&quot;:&quot;PaymentSucceeded&quot;}</code></pre>
+<h2 id="asynchrone-event-contracts"><a class="anchor-link" href="#asynchrone-event-contracts" aria-label="Abschnitt verlinken">#</a>Asynchrone Event-Contracts</h2>
+<p>Die REST-Endpunkte sind nicht die einzige Contract-Flaeche. Fuer das System entscheidend sind auch Broker-Events und ihre fachlichen Feldzuschnitte.</p>
+<div class="table-wrap"><table><thead><tr><th>Technischer Kanal</th><th>Fachlicher Eventtyp</th><th>Producer</th><th>Consumer</th><th>Pflichtfelder</th></tr></thead><tbody><tr><td><code>PaymentSucceeded</code></td><td>erfolgreicher Zahlungsabschluss</td><td>Billing-Service</td><td>Invoice-Service</td><td><code>correlationId</code>, <code>orderId</code>, <code>paymentId</code>, <code>amount</code>, <code>currency</code>, <code>timestamp</code></td></tr><tr><td><code>audit.domain-events</code></td><td>normalisierte Domain- und Audit-Events</td><td>Shop-, Warehouse-, Billing-, Invoice-Service</td><td>Audit-Service</td><td><code>correlationId</code>, <code>eventType</code>, <code>sourceService</code>, <code>timestamp</code>, <code>payload</code>, <code>metadata</code></td></tr><tr><td><code>GET /v1/audit/stream</code> als SSE</td><td>Live-Snapshot fuer Admin</td><td>Audit-Service</td><td>Admin Dashboard</td><td><code>id</code>, <code>eventType</code>, <code>correlationId</code>, kompakter Status-/Payload-Ausschnitt</td></tr></tbody></table></div>
+<p>Wichtige fachliche Eventtypen, die in Payloads oder Snapshots konsistent bleiben muessen:</p>
+<div class="table-wrap"><table><thead><tr><th>Quelle</th><th>Fachliche Eventtypen</th></tr></thead><tbody><tr><td>Shop</td><td><code>OrderCreated</code>, <code>OrderReservationRequested</code>, <code>OrderPaymentRequested</code>, <code>OrderPaymentPending</code>, <code>OrderCompleted</code>, <code>OrderFailedOutOfStock</code>, <code>OrderFailedPayment</code>, <code>OrderRollbackStarted</code>, <code>OrderRollbackCompleted</code></td></tr><tr><td>Warehouse</td><td><code>WarehouseProductInitialized</code>, <code>StockAdjusted</code>, <code>ReservationCreated</code>, <code>ReservationRejected</code>, <code>ReservationCancelled</code>, <code>StockBooked</code>, <code>WarehouseFailureInjected</code></td></tr><tr><td>Billing</td><td><code>PaymentInitiated</code>, <code>PaymentProviderRequested</code>, <code>PaymentPending</code>, <code>PaymentSucceeded</code>, <code>PaymentFailed</code>, <code>PaymentRefundRequested</code>, <code>PaymentRefunded</code>, <code>PaymentRefundFailed</code>, <code>PaymentWebhookReceived</code></td></tr><tr><td>Invoice</td><td><code>InvoiceGenerationRequested</code>, <code>InvoiceGenerated</code>, <code>InvoiceGenerationFailed</code>, <code>InvoiceRetryScheduled</code>, <code>CircuitBreakerStateChanged</code></td></tr></tbody></table></div>
+<h2 id="offene-stellen-fuer-die-weitere-bearbeitung"><a class="anchor-link" href="#offene-stellen-fuer-die-weitere-bearbeitung" aria-label="Abschnitt verlinken">#</a>Offene Stellen fuer die weitere Bearbeitung</h2>
+<p>Die folgenden Punkte sind bewusst noch nicht final und sollten spaeter als DTOs, Interfaces oder Schemas nachgeschaerft werden:</p>
+<ul><li>Die Controller-Bodies sind im Code fast ueberall noch <code>unknown</code>; die Route steht also, das Request-/Response-Typmodell noch nicht.</li><li><code>POST /v1/orders</code> ist fachlich ueber Warenkorb plus Header definiert, aber noch nicht als finaler Checkout-Body typisiert.</li><li><code>POST /v1/warehouse/bookings</code> und <code>POST /v1/billing/refunds</code> sind semantisch klar ueber <code>correlationId</code>, aber das konkrete DTO-Shape ist noch offen.</li><li><code>POST /v1/billing/webhooks/{provider}</code> bleibt provider-spezifisch im Eingang und muss intern auf kanonische Billing-Events gemappt werden.</li><li>Beim Audit gibt es zwei Ebenen, die konsistent gehalten werden muessen: technischer Transport (<code>audit.domain-events</code>) und fachlicher <code>eventType</code> im Payload.</li><li>Sobald OpenAPI oder AsyncAPI existieren, sollte dieses Kapitel nicht davon abweichen, sondern die lesbare Kurzfassung derselben Contracts sein.</li></ul>
+<h2 id="weiterfuehrende-detailkapitel"><a class="anchor-link" href="#weiterfuehrende-detailkapitel" aria-label="Abschnitt verlinken">#</a>Weiterfuehrende Detailkapitel</h2>
+<ul><li><a href="02_systemarchitektur_kommunikation.html">Systemarchitektur und Kommunikation</a></li><li><a href="../services/03_service_shop.html">Shop-Service</a></li><li><a href="../services/04_service_warehouse.html">Warehouse-Service</a></li><li><a href="../services/05_service_billing_invoice.html">Billing und Invoice</a></li><li><a href="../services/06_audit_service.html">Audit-Service</a></li><li><a href="../qualitaet/12_tests_abnahme_demo.html">Tests, Abnahme und Demo</a></li></ul>
+        </article>
+      </div>
+
+      <nav class="doc-pagination" aria-label="Kapitel wechseln">
+        <a class="button ghost" href="02_systemarchitektur_kommunikation.html">Vorheriges Kapitel</a>
+        <a class="button" href="../../index.html#kapitel">Alle Kapitel</a>
+        <a class="button primary" href="../services/03_service_shop.html">Nächstes Kapitel</a>
+      </nav>
+    </main>
+  </body>
+</html>

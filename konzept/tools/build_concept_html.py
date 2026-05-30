@@ -43,6 +43,14 @@ CHAPTERS = [
         "summary": "Service-Landkarte, Datenhoheit, REST- und Event-Kommunikation, Header-Konventionen und Sicherheitsgrenzen.",
     },
     {
+        "number": "02a",
+        "source": "02a_contracts_und_schnittstellen.md",
+        "folder": "architektur",
+        "group": "Architektur",
+        "title": "Contracts und Schnittstellenkatalog",
+        "summary": "Zentrale Uebersicht ueber REST-, Event-, Audit- und Betriebs-Contracts mit technischen Ankern fuer spaetere Nachschaerfung.",
+    },
+    {
         "number": "03",
         "source": "03_service_shop.md",
         "folder": "services",

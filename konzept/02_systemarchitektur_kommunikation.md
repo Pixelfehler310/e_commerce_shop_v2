@@ -40,6 +40,8 @@ Die Kommunikation folgt festen Regeln, damit Kopplung sichtbar und kontrollierba
 - Alle Services publizieren Domain-Events oder Audit-Snapshots an den Audit-Service.
 - Kein Service liest oder schreibt in die Datenbank eines anderen Services.
 
+Die konkrete Route-, Payload- und Event-Matrix steht im Kapitel [Contracts und Schnittstellenkatalog](02a_contracts_und_schnittstellen.md). Dieses Kapitel bleibt die Uebersicht ueber Kommunikationsprinzipien; der Contracts-Katalog ist der zentrale Nachschaerfungsort fuer Schnittstellen.
+
 ## Synchrone Kommunikation
 
 Synchrone REST-Kommunikation wird dort eingesetzt, wo der aufrufende Prozess das Ergebnis unmittelbar für die nächste Entscheidung benötigt.

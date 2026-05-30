@@ -231,7 +231,9 @@ Wichtige Contracts:
 - Billing zu Invoice: `PaymentSucceeded` Event.
 - Services zu Audit: Snapshot Payload.
 
-Für jedes Contract-Payload sollte ein Beispiel in `docs/api.md` oder OpenAPI/AsyncAPI abgelegt werden.
+Die zentrale lesbare Uebersicht und die kanonischen Payload-Beispiele stehen im Kapitel [Contracts und Schnittstellenkatalog](02a_contracts_und_schnittstellen.md).
+
+Fuer jedes Contract-Payload sollte zusaetzlich ein Beispiel in `docs/api.md` oder OpenAPI/AsyncAPI abgelegt werden.
 
 ## Demo-Skript
 
