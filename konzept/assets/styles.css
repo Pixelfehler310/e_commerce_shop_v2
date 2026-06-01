@@ -1013,6 +1013,77 @@ h3:focus-within .anchor-link {
   white-space: pre;
 }
 
+.mermaid,
+.mermaid-diagram {
+  margin: 1rem 0 0;
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  padding: 1rem;
+}
+
+.mermaid svg,
+.mermaid-diagram svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.mermaid .label,
+.mermaid text,
+.mermaid-diagram .label,
+.mermaid-diagram text {
+  fill: var(--ink);
+}
+
+.mermaid .cluster rect,
+.mermaid .node rect,
+.mermaid .node polygon,
+.mermaid .node circle,
+.mermaid .node ellipse,
+.mermaid .state-note,
+.mermaid .state-note rect,
+.mermaid-diagram .cluster rect,
+.mermaid-diagram .node rect,
+.mermaid-diagram .node polygon,
+.mermaid-diagram .node circle,
+.mermaid-diagram .node ellipse,
+.mermaid-diagram .state-note,
+.mermaid-diagram .state-note rect {
+  stroke: var(--teal);
+}
+
+.mermaid .edgePath .path,
+.mermaid .transition path,
+.mermaid .flowchart-link,
+.mermaid-diagram .edgePath .path,
+.mermaid-diagram .transition path,
+.mermaid-diagram .flowchart-link {
+  stroke: var(--blue);
+}
+
+.mermaid .marker,
+.mermaid marker path,
+.mermaid-diagram .marker,
+.mermaid-diagram marker path {
+  fill: var(--blue);
+  stroke: var(--blue);
+}
+
+.mermaid .note,
+.mermaid .note rect,
+.mermaid-diagram .note,
+.mermaid-diagram .note rect {
+  fill: #fffaf0;
+  stroke: var(--amber);
+}
+
+.mermaid .divider,
+.mermaid-diagram .divider {
+  stroke: var(--line);
+}
+
 .table-wrap {
   overflow-x: auto;
   margin: 1rem 0 0;

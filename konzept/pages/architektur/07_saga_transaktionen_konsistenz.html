@@ -70,7 +70,7 @@
 <p>Vorteile dieser Entscheidung:</p>
 <ul><li>Der Bestellprozess bleibt zentral nachvollziehbar.</li><li>Statuswechsel können im Shop-Service konsistent modelliert werden.</li><li>Fehlerpfade sind für Demo und Tests explizit auslösbar.</li><li>Frontends müssen nicht selbst mehrere Services koordinieren.</li></ul>
 <h2 id="happy-path"><a class="anchor-link" href="#happy-path" aria-label="Abschnitt verlinken">#</a>Happy Path</h2>
-<pre class="code-block language-mermaid"><code>sequenceDiagram
+<pre class="mermaid">sequenceDiagram
     participant C as Customer UI
     participant S as Shop-Service
     participant W as Warehouse-Service
@@ -94,7 +94,7 @@
     W-&gt;&gt;A: StockBooked
     W--&gt;&gt;S: booked
     S-&gt;&gt;A: OrderCompleted
-    S--&gt;&gt;C: 201 COMPLETED</code></pre>
+    S--&gt;&gt;C: 201 COMPLETED</pre>
 <h2 id="happy-path-schritte-im-detail"><a class="anchor-link" href="#happy-path-schritte-im-detail" aria-label="Abschnitt verlinken">#</a>Happy-Path-Schritte im Detail</h2>
 <div class="table-wrap"><table><thead><tr><th>Schritt</th><th>Owner</th><th>Lokale Transaktion</th><th>Ergebnis</th></tr></thead><tbody><tr><td>Request validieren</td><td>Shop</td><td>Nein</td><td>Fehlerhafte Requests werden abgelehnt.</td></tr><tr><td>Idempotenz-Key sperren</td><td>Shop/Redis</td><td>Redis-Operation</td><td>Nur ein Prozess verarbeitet den Key.</td></tr><tr><td>Order anlegen</td><td>Shop</td><td>Ja</td><td>Status <code>CREATED</code>.</td></tr><tr><td>Bestand reservieren</td><td>Warehouse</td><td>Ja</td><td>Bestand wird atomar von frei nach reserviert bewegt.</td></tr><tr><td>Zahlung starten</td><td>Billing</td><td>Ja</td><td>Payment wird gespeichert und Provider aufgerufen.</td></tr><tr><td>Rechnung anstoßen</td><td>Billing/RabbitMQ</td><td>Ja/Event</td><td><code>PaymentSucceeded</code> wird publiziert.</td></tr><tr><td>Bestand ausbuchen</td><td>Warehouse</td><td>Ja</td><td>Reservierung wird final gebucht.</td></tr><tr><td>Order abschließen</td><td>Shop</td><td>Ja</td><td>Status <code>COMPLETED</code>, Warenkorb wird geleert.</td></tr><tr><td>Idempotenzantwort speichern</td><td>Shop/Redis</td><td>Redis-Operation</td><td>Wiederholung erhält dieselbe Antwort.</td></tr></tbody></table></div>
 <h2 id="fehlerpfad-a-zahlung-abgelehnt"><a class="anchor-link" href="#fehlerpfad-a-zahlung-abgelehnt" aria-label="Abschnitt verlinken">#</a>Fehlerpfad A: Zahlung abgelehnt</h2>
@@ -120,7 +120,7 @@
 <p>Ablauf:</p>
 <ol><li>Billing legt Payment mit Status <code>PENDING</code> an.</li><li>Shop-Service setzt Order auf <code>PAYMENT_PENDING</code>.</li><li>Client erhält <code>202 Accepted</code> oder <code>201</code> mit Pending-Status.</li><li>Payment-Stub sendet Webhook nach konfigurierter Verzögerung.</li><li>Billing aktualisiert Payment auf <code>SUCCEEDED</code> oder <code>FAILED</code>.</li><li>Billing publiziert ein Event.</li><li>Shop-Service konsumiert oder erhält die Fortsetzung und führt Booking oder Kompensation aus.</li></ol>
 <h2 id="saga-zustandsmaschine"><a class="anchor-link" href="#saga-zustandsmaschine" aria-label="Abschnitt verlinken">#</a>Saga-Zustandsmaschine</h2>
-<pre class="code-block language-mermaid"><code>stateDiagram-v2
+<pre class="mermaid">stateDiagram-v2
     [*] --&gt; CREATED
     CREATED --&gt; RESERVATION_PENDING
     RESERVATION_PENDING --&gt; RESERVED
@@ -139,7 +139,7 @@
     PAYMENT_FAILED --&gt; [*]
     ROLLBACK_COMPLETED --&gt; [*]
     COMPLETED --&gt; [*]
-    FAILED_REQUIRES_MANUAL_REVIEW --&gt; [*]</code></pre>
+    FAILED_REQUIRES_MANUAL_REVIEW --&gt; [*]</pre>
 <h2 id="statusuebergaenge-und-erlaubte-trigger"><a class="anchor-link" href="#statusuebergaenge-und-erlaubte-trigger" aria-label="Abschnitt verlinken">#</a>Statusübergänge und erlaubte Trigger</h2>
 <div class="table-wrap"><table><thead><tr><th>Von</th><th>Nach</th><th>Trigger</th></tr></thead><tbody><tr><td><code>CREATED</code></td><td><code>RESERVATION_PENDING</code></td><td>Orchestrator startet Warehouse-Aufruf.</td></tr><tr><td><code>RESERVATION_PENDING</code></td><td><code>RESERVED</code></td><td>Warehouse reserviert erfolgreich.</td></tr><tr><td><code>RESERVATION_PENDING</code></td><td><code>OUT_OF_STOCK</code></td><td>Warehouse lehnt ab.</td></tr><tr><td><code>RESERVED</code></td><td><code>PAYMENT_PENDING</code></td><td>Billing liefert Pending.</td></tr><tr><td><code>RESERVED</code></td><td><code>BOOKING_PENDING</code></td><td>Billing liefert synchronen Erfolg.</td></tr><tr><td><code>RESERVED</code></td><td><code>ROLLBACK_PENDING</code></td><td>Billing liefert Fehler.</td></tr><tr><td><code>PAYMENT_PENDING</code></td><td><code>BOOKING_PENDING</code></td><td>Webhook meldet Erfolg.</td></tr><tr><td><code>PAYMENT_PENDING</code></td><td><code>ROLLBACK_PENDING</code></td><td>Webhook meldet Fehler.</td></tr><tr><td><code>BOOKING_PENDING</code></td><td><code>COMPLETED</code></td><td>Warehouse bucht final.</td></tr><tr><td><code>BOOKING_PENDING</code></td><td><code>ROLLBACK_PENDING</code></td><td>Warehouse-Booking scheitert.</td></tr><tr><td><code>ROLLBACK_PENDING</code></td><td><code>PAYMENT_FAILED</code></td><td>Reservierungsstorno nach Payment-Fehler erledigt.</td></tr><tr><td><code>ROLLBACK_PENDING</code></td><td><code>ROLLBACK_COMPLETED</code></td><td>Refund erledigt.</td></tr><tr><td><code>ROLLBACK_PENDING</code></td><td><code>FAILED_REQUIRES_MANUAL_REVIEW</code></td><td>Kompensation scheitert endgültig.</td></tr></tbody></table></div>
 <h2 id="kompensationsmatrix"><a class="anchor-link" href="#kompensationsmatrix" aria-label="Abschnitt verlinken">#</a>Kompensationsmatrix</h2>
@@ -168,5 +168,7 @@
         <a class="button primary" href="../qualitaet/08_idempotenz_resilienz_security.html">Nächstes Kapitel</a>
       </nav>
     </main>
+    <script src="../../assets/mermaid.min.js"></script>
+    <script src="../../assets/mermaid-init.js"></script>
   </body>
 </html>
